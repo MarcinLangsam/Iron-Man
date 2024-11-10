@@ -16,9 +16,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.RichTooltip
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -36,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 
 
@@ -66,9 +71,8 @@ fun ItemSlotWeapon(
         Button(
             onClick = { player.equipWeapon(item) },
             modifier = Modifier
-                .height(150.dp)
-                .width(150.dp)
-                .padding(10.dp)
+                .height(100.dp)
+                .width(100.dp)
                 .background(
                     color = Color.Transparent
                 ),
@@ -82,7 +86,7 @@ fun ItemSlotWeapon(
                 Image(
                     painter = painterResource(id = item.sprite.value),
                     contentDescription = "Image",
-                    modifier = Modifier.size(150.dp)
+                    modifier = Modifier.size(100.dp)
                 )
             }
         }
@@ -116,9 +120,8 @@ fun ItemSlotRune(
         Button(
             onClick = { if(!player.inventoryRunes[i].isActive) {player.equipRune(item); player.inventoryRunes[i].isActive = !player.inventoryRunes[i].isActive; isGrayedOut.value = !isGrayedOut.value; activeRunesIndex.add(i)} },
             modifier = Modifier
-                .height(150.dp)
-                .width(150.dp)
-                .padding(10.dp)
+                .height(100.dp)
+                .width(100.dp)
                 .background(
                     color = Color.Transparent
                 ),
@@ -133,7 +136,7 @@ fun ItemSlotRune(
                     painter = painterResource(id = item.sprite.value),
                     contentDescription = "Image",
                     modifier = Modifier
-                        .size(150.dp)
+                        .size(100.dp)
                 )
                 if (player.inventoryRunes[i].isActive) {
                     Box(
@@ -149,12 +152,14 @@ fun ItemSlotRune(
 
 @Composable
 fun ListOfWeapons(items: MutableList<Weapon>){
-    LazyColumn{
-        items(items.size){
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(4)
+    ) {
+        items(items.size) { index ->
             val item by remember {
-                mutableStateOf(items[it])
+                mutableStateOf(items[index])
             }
-                ItemSlotWeapon(item = item)
+            ItemSlotWeapon(item = item)
         }
     }
 }
@@ -162,7 +167,9 @@ fun ListOfWeapons(items: MutableList<Weapon>){
 
 @Composable
 fun ListOfRunes(items: MutableList<Rune>){
-    LazyColumn{
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(4)
+    ){
         items(items.size){
             val item by remember {
                 mutableStateOf(items[it])
@@ -173,13 +180,61 @@ fun ListOfRunes(items: MutableList<Rune>){
 }
 
 @Composable
+fun ListOfStats(stat: List<Any>)
+{
+    LazyColumn(
+        modifier = Modifier.padding(16.dp)
+    ) {
+        itemsIndexed(stat) { _, info ->
+            Text(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(2.dp),
+                text = info.toString(),
+                fontSize = 16.sp,
+                color = Color.Black
+            )
+        }
+    }
+}
+
+@Composable
 fun InventoryScreen() {
     val maxRunes = remember { player.maxRunes }
     var currentCategory by remember { mutableStateOf("Bronie") }
+
     var currentWeapon by remember { player.weapon.sprite }
+    var currentOff_hand by remember { player.off_hand.sprite }
+    var currentArmor by remember { player.armor.sprite }
+    var currentNecklace by remember { player.necklace.sprite }
+    var currentRing by remember { player.ring.sprite }
+    var currentHelmet by remember { player.helmet.sprite }
+    var currentShoes by remember { player.shoes.sprite }
+    var currentPants by remember { player.pants.sprite }
+
     var runesSlots = remember { player.runesActive }
     val invWeapon = remember { player.inventoryWeapons }
     var invRune = remember { player.inventoryRunes }
+
+    val playerInfo by remember {
+        derivedStateOf {
+            listOf(
+                player.name,
+                "Poziom: " + player.lv.toString(),
+                "EXP: " + player.EXP.value.toString() + "/" + player.EXPtoLv.toString(),
+                "HP: " + player.HP.value.toString() + "/" + player.MAX_HP.value.toString(),
+                "AP: " + player.MAX_AP.value.toString(),
+                "Odzyskiwanie AP: " + player.AP_recovery.toString(),
+                "Siła: " + player.STR.toString(),
+                "Witalność: " + player.VIT.toString(),
+                "Zręczność: " + player.DEX.toString(),
+                "Inteligencja: " + player.INT.toString(),
+                "Obrażenia Broni: " + player.weaponDamage.toString(),
+                "Maksymalna Ilość Run: " + player.maxRunes.value.toString(),
+                "Złoto: " + player.gold.toString()
+            )
+        }
+    }
 
     LaunchedEffect(player.inventoryRunes) {
         invRune = player.inventoryRunes
@@ -197,48 +252,148 @@ fun InventoryScreen() {
         horizontalAlignment = Alignment.Start
     ) {
         Row(Modifier.fillMaxWidth()) {
+
             Column(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(0.5f),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ){
+                ListOfStats(stat = playerInfo)
+            }
+
+            Column(
+                modifier = Modifier.weight(0.4f),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Spacer(modifier = Modifier.height(80.dp))
-                Box(
-                    modifier = Modifier
-                        .size(80.dp)
-                        .background(Color.Gray),
-                ) {
-                    LaunchedEffect(player.weapon.sprite) {
-                        currentWeapon = player.weapon.sprite.value
-                    }
+                Spacer(modifier = Modifier.height(20.dp))
+
+
+                Box(modifier = Modifier
+                    .size(40.dp)
+                    .background(Color.Gray)) {
+                    LaunchedEffect(player.helmet.sprite) {currentHelmet = player.helmet.sprite.value }
                     Image(
-                        painter = painterResource(id = currentWeapon),
+                        painter = painterResource(id = currentHelmet),
                         contentDescription = "Image",
-                        modifier = Modifier.size(150.dp)
+                        modifier = Modifier.size(40.dp)
                     )
 
-                    repeat(maxRunes.value) { index ->
-                        Box(
+                    Box(modifier = Modifier
+                        .size(40.dp)
+                        .background(Color.Gray)) {
+                        LaunchedEffect(player.necklace.sprite) {currentNecklace = player.necklace.sprite.value }
+                        Image(
+                            painter = painterResource(id = currentNecklace),
+                            contentDescription = "Image",
                             modifier = Modifier
-                                .size(35.dp)
-                                .offset(
-                                    getOffsetForSquareBetweenPluses_x(index),
-                                    getOffsetForSquareBetweenPluses_y(index)
+                                .size(40.dp)
+                                .offset(0.dp, 45.dp)
+                        )
+                    }
+
+                    Box(modifier = Modifier
+                        .size(40.dp)
+                        .background(Color.Gray)) {
+                        LaunchedEffect(player.armor.sprite) {currentArmor = player.armor.sprite.value }
+                        Image(
+                            painter = painterResource(id = currentArmor),
+                            contentDescription = "Image",
+                            modifier = Modifier
+                                .size(40.dp)
+                                .offset(0.dp, 90.dp)
+                        )
+                    }
+
+                    Box(modifier = Modifier
+                        .size(40.dp)
+                        .background(Color.Gray)) {
+                        LaunchedEffect(player.pants.sprite) {currentPants = player.pants.sprite.value }
+                        Image(
+                            painter = painterResource(id = currentPants),
+                            contentDescription = "Image",
+                            modifier = Modifier
+                                .size(40.dp)
+                                .offset(0.dp, 135.dp)
+                        )
+                    }
+
+                    Box(modifier = Modifier
+                        .size(40.dp)
+                        .background(Color.Gray)) {
+                        LaunchedEffect(player.shoes.sprite) {currentShoes = player.shoes.sprite.value }
+                        Image(
+                            painter = painterResource(id = currentShoes),
+                            contentDescription = "Image",
+                            modifier = Modifier
+                                .size(40.dp)
+                                .offset(0.dp, 180.dp)
+                        )
+                    }
+
+                    Box(modifier = Modifier
+                        .size(40.dp)
+                        .background(Color.Gray)) {
+                        LaunchedEffect(player.weapon.sprite) {
+                            currentWeapon = player.weapon.sprite.value
+                        }
+                        Image(
+                            painter = painterResource(id = currentWeapon),
+                            contentDescription = "Image",
+                            modifier = Modifier
+                                .size(40.dp)
+                                .offset((-45).dp, 105.dp)
+                        )
+
+                        repeat(maxRunes.value) { index ->
+                            Box(
+                                modifier = Modifier
+                                    .size(25.dp)
+                                    .offset(
+                                        (-75).dp,
+                                        getOffsetForSquareBetweenPluses_y(index)
+                                    )
+                                    .clickable { player.deequipRune() }
+                            ) {
+                                LaunchedEffect(player.runesActive) {
+                                    runesSlots = player.runesActive
+                                }
+                                Image(
+                                    painter = painterResource(id = runesSlots[index].sprite.value),
+                                    contentDescription = "Image",
+                                    modifier = Modifier.size(25.dp)
                                 )
-                                .clickable { player.deequipRune() }
-                        ) {
-                            LaunchedEffect(player.runesActive) {
-                                runesSlots = player.runesActive
                             }
-                            Image(
-                                painter = painterResource(id = runesSlots[index].sprite.value),
-                                contentDescription = "Image",
-                                modifier = Modifier.size(150.dp)
-                            )
                         }
                     }
 
+                    Box(modifier = Modifier
+                        .size(40.dp)
+                        .background(Color.Gray)) {
+                        LaunchedEffect(player.off_hand.sprite) {currentOff_hand = player.off_hand.sprite.value }
+                        Image(
+                            painter = painterResource(id = currentOff_hand),
+                            contentDescription = "Image",
+                            modifier = Modifier
+                                .size(40.dp)
+                                .offset(45.dp, 105.dp)
+                        )
+                    }
+
+                    Box(modifier = Modifier
+                        .size(40.dp)
+                        .background(Color.Gray)) {
+                        LaunchedEffect(player.ring.sprite) {currentRing = player.ring.sprite.value }
+                        Image(
+                            painter = painterResource(id = currentRing),
+                            contentDescription = "Image",
+                            modifier = Modifier
+                                .size(40.dp)
+                                .offset(45.dp, 150.dp)
+                        )
+                    }
                 }
+
             }
 
             Column(
@@ -281,7 +436,7 @@ fun InventoryScreen() {
 }
 
 private fun getOffsetForSquareBetweenPluses_x(index: Int): Dp {
-    val offset = 60.dp
+    val offset = -20.dp
     return when (index) {
         0 -> 25.dp
         1 -> offset+30.dp
@@ -296,16 +451,13 @@ private fun getOffsetForSquareBetweenPluses_x(index: Int): Dp {
 }
 
 private fun getOffsetForSquareBetweenPluses_y(index: Int): Dp {
-    val offset = 60.dp
+    //val offset = 25.dp
     return when (index) {
-        0 -> -offset
-        1 -> -offset+30.dp
-        2 ->  30.dp
-        3 -> offset+30.dp
-        4 -> offset+45.dp
-        5 -> offset+30.dp
-        6 -> 30.dp
-        7 -> -offset+30.dp
-        else -> 0.dp
+        0 -> 50.dp
+        1 -> 77.dp
+        2 -> 104.dp
+        3 -> 131.dp
+        4 -> 158.dp
+        else -> 50.dp
     }
 }

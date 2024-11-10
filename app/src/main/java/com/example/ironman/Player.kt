@@ -19,15 +19,31 @@ public class Player (
     var HP = mutableStateOf(VIT*10)
     var MAX_AP = mutableStateOf((DEX/5)+100)
     var AP = mutableStateOf((DEX/5)+100)
-    var EXP = 0
+    var EXP = mutableStateOf(0)
     var EXPtoLv = 100 * lv
     var AP_recovery = 2
     var actionQueue = mutableStateListOf<Card>()
     var mainDeck = mutableListOf<Card>()
     var temporaryDeck = mutableListOf<Card>()
     var on_hand = mutableListOf<Card>()
-    var weapon = Weapon("Brak", {player.weaponDamage+=0},{player.weaponDamage-=0},0,mutableStateOf(R.drawable.empty_slot),"")
+
+    var weapon = Weapon("Brak", {player.weaponDamage+=0},{player.weaponDamage-=0},0,mutableStateOf(R.drawable.empty_slot),"","empty")
     var weaponSprite = weapon.sprite
+    var armor = Weapon("Brak", {player.weaponDamage+=0},{player.weaponDamage-=0},0,mutableStateOf(R.drawable.empty_slot),"","empty")
+    var armorSprite = armor.sprite
+    var necklace = Weapon("Brak", {player.weaponDamage+=0},{player.weaponDamage-=0},0,mutableStateOf(R.drawable.empty_slot),"","empty")
+    var necklaceSprite = necklace.sprite
+    var ring = Weapon("Brak", {player.weaponDamage+=0},{player.weaponDamage-=0},0,mutableStateOf(R.drawable.empty_slot),"","empty")
+    var ringSprite = ring.sprite
+    var off_hand = Weapon("Brak", {player.weaponDamage+=0},{player.weaponDamage-=0},0,mutableStateOf(R.drawable.empty_slot),"","empty")
+    var off_handSprite = off_hand.sprite
+    var helmet = Weapon("Brak", {player.weaponDamage+=0},{player.weaponDamage-=0},0,mutableStateOf(R.drawable.empty_slot),"","empty")
+    var helmetSprite = helmet.sprite
+    var pants = Weapon("Brak", {player.weaponDamage+=0},{player.weaponDamage-=0},0,mutableStateOf(R.drawable.empty_slot),"","empty")
+    var pantsSprite = pants.sprite
+    var shoes = Weapon("Brak", {player.weaponDamage+=0},{player.weaponDamage-=0},0,mutableStateOf(R.drawable.empty_slot),"","empty")
+    var shoesSprite = shoes.sprite
+
     var maxRunes = mutableStateOf(0)
     var weaponDamage = 0
     var damage = weaponDamage+STR
@@ -37,6 +53,15 @@ public class Player (
     var inventoryRunes = mutableListOf<Rune>()
 
     var gold = 0
+
+    fun levelUp(): Boolean {
+        if (player.EXP.value >= player.EXPtoLv)
+        {
+            return true
+        }
+
+        return false
+    }
 
 
     fun updateStats()
@@ -80,19 +105,120 @@ public class Player (
 
     fun equipWeapon(equipWeapon: Weapon)
     {
-        //old weapon
-        deequipAllRune()
-        weapon.deequipEffect.invoke(player)
-        //new weapon
-        weapon.sprite = equipWeapon.sprite
-        weapon.name = equipWeapon.name
-        weapon.equipEffect = equipWeapon.equipEffect
-        weapon.deequipEffect = equipWeapon.deequipEffect
-        weapon.description = equipWeapon.description
-        weapon.runeSlot = equipWeapon.runeSlot
-        weapon.equipEffect.invoke(player)
-        weaponSprite = weapon.sprite
-        maxRunes.value = weapon.runeSlot
+        if (equipWeapon.type == "weapon")
+        {
+            //old weapon
+            deequipAllRune()
+            weapon.deequipEffect.invoke(player)
+            //new weapon
+            weapon.sprite = equipWeapon.sprite
+            weapon.name = equipWeapon.name
+            weapon.equipEffect = equipWeapon.equipEffect
+            weapon.deequipEffect = equipWeapon.deequipEffect
+            weapon.description = equipWeapon.description
+            weapon.runeSlot = equipWeapon.runeSlot
+            weapon.equipEffect.invoke(player)
+            weaponSprite = weapon.sprite
+            maxRunes.value = weapon.runeSlot
+        }
+        else if (equipWeapon.type == "off_hand")
+        {
+            //old off_hand
+            off_hand.deequipEffect.invoke(player)
+            //new off_hand
+            off_hand.sprite = equipWeapon.sprite
+            off_hand.name = equipWeapon.name
+            off_hand.equipEffect = equipWeapon.equipEffect
+            off_hand.deequipEffect = equipWeapon.deequipEffect
+            off_hand.description = equipWeapon.description
+            off_hand.runeSlot = equipWeapon.runeSlot
+            off_hand.equipEffect.invoke(player)
+            off_handSprite = off_hand.sprite
+        }
+        else if (equipWeapon.type == "armor")
+        {
+            //old armor
+            armor.deequipEffect.invoke(player)
+            //new armor
+            armor.sprite = equipWeapon.sprite
+            armor.name = equipWeapon.name
+            armor.equipEffect = equipWeapon.equipEffect
+            armor.deequipEffect = equipWeapon.deequipEffect
+            armor.description = equipWeapon.description
+            armor.runeSlot = equipWeapon.runeSlot
+            armor.equipEffect.invoke(player)
+            armorSprite = armor.sprite
+        }
+        else if (equipWeapon.type == "necklace")
+        {
+            //old necklace
+            necklace.deequipEffect.invoke(player)
+            //new necklace
+            necklace.sprite = equipWeapon.sprite
+            necklace.name = equipWeapon.name
+            necklace.equipEffect = equipWeapon.equipEffect
+            necklace.deequipEffect = equipWeapon.deequipEffect
+            necklace.description = equipWeapon.description
+            necklace.runeSlot = equipWeapon.runeSlot
+            necklace.equipEffect.invoke(player)
+            necklaceSprite = necklace.sprite
+        }
+        else if (equipWeapon.type == "ring")
+        {
+            //old ring
+            ring.deequipEffect.invoke(player)
+            //new ring
+            ring.sprite = equipWeapon.sprite
+            ring.name = equipWeapon.name
+            ring.equipEffect = equipWeapon.equipEffect
+            ring.deequipEffect = equipWeapon.deequipEffect
+            ring.description = equipWeapon.description
+            ring.runeSlot = equipWeapon.runeSlot
+            ring.equipEffect.invoke(player)
+            ringSprite = ring.sprite
+        }
+        else if (equipWeapon.type == "helmet")
+        {
+            //old helmet
+            helmet.deequipEffect.invoke(player)
+            //new helmet
+            helmet.sprite = equipWeapon.sprite
+            helmet.name = equipWeapon.name
+            helmet.equipEffect = equipWeapon.equipEffect
+            helmet.deequipEffect = equipWeapon.deequipEffect
+            helmet.description = equipWeapon.description
+            helmet.runeSlot = equipWeapon.runeSlot
+            helmet.equipEffect.invoke(player)
+            helmetSprite = helmet.sprite
+        }
+        else if (equipWeapon.type == "shoes")
+        {
+            //old shoes
+            shoes.deequipEffect.invoke(player)
+            //new shoes
+            shoes.sprite = equipWeapon.sprite
+            shoes.name = equipWeapon.name
+            shoes.equipEffect = equipWeapon.equipEffect
+            shoes.deequipEffect = equipWeapon.deequipEffect
+            shoes.description = equipWeapon.description
+            shoes.runeSlot = equipWeapon.runeSlot
+            shoes.equipEffect.invoke(player)
+            shoesSprite = shoes.sprite
+        }
+        else if (equipWeapon.type == "pants")
+        {
+            //old pants
+            pants.deequipEffect.invoke(player)
+            //new pants
+            pants.sprite = equipWeapon.sprite
+            pants.name = equipWeapon.name
+            pants.equipEffect = equipWeapon.equipEffect
+            pants.deequipEffect = equipWeapon.deequipEffect
+            pants.description = equipWeapon.description
+            pants.runeSlot = equipWeapon.runeSlot
+            pants.equipEffect.invoke(player)
+            pantsSprite = pants.sprite
+        }
 
     }
 
@@ -162,7 +288,7 @@ public class Player (
 
     fun toSerializablePlayer(): SerializablePlayer {
         return SerializablePlayer(
-            name, lv, STR, VIT, DEX, INT, MAX_HP.value, HP.value, MAX_AP.value, AP.value, EXP, EXPtoLv, AP_recovery,
+            name, lv, STR, VIT, DEX, INT, MAX_HP.value, HP.value, MAX_AP.value, AP.value, EXP.value, EXPtoLv, AP_recovery,
             mainDeck.map { it.name },
             temporaryDeck.map { it.name },
             weapon.name,
@@ -193,7 +319,7 @@ public class Player (
             player.HP.value = serializablePlayer.HP
             player.MAX_AP.value = serializablePlayer.MAX_AP
             player.AP.value = serializablePlayer.AP
-            player.EXP = serializablePlayer.EXP
+            player.EXP.value = serializablePlayer.EXP
             player.EXPtoLv = serializablePlayer.EXPtoLv
             player.AP_recovery = serializablePlayer.AP_recovery
             player.mainDeck = serializablePlayer.mainDeck.map { getCardByName(it) }.toMutableList()
@@ -206,7 +332,6 @@ public class Player (
             player.gold = serializablePlayer.gold
 
         }
-
 }
 
 @Serializable
@@ -239,7 +364,7 @@ fun getCardByName(name: String): Card {
 }
 
 fun getWeaponByName(name: String): Weapon {
-    return WeaponsList[name] ?: Weapon(name, { _: Player -> }, { _: Player -> }, 0, mutableStateOf(R.drawable.empty_slot), "")
+    return WeaponsList[name] ?: Weapon(name, { _: Player -> }, { _: Player -> }, 0, mutableStateOf(R.drawable.empty_slot), "","empty")
 }
 
 fun getRuneByName(name: String): Rune {

@@ -59,7 +59,7 @@ public class Enemy(
 }
 
 var szkielet = Enemy("Szkielet", mutableStateOf(1), mutableStateOf(20),
-    mutableStateOf(20),mutableStateOf(4),mutableStateOf(10),mutableStateOf(10),mutableStateOf(10),10, 10,10,R.drawable.skeleton,
+    mutableStateOf(20),mutableStateOf(4),mutableStateOf(10),mutableStateOf(10),mutableStateOf(10),10, 100,10,R.drawable.skeleton,
     listOf(enemyCards["Atak"], enemyCards["Leczenie"], enemyCards["Walniecie"])
 )
 

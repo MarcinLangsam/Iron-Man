@@ -298,7 +298,7 @@ fun FightScreen(onMap: () -> Unit){
             if(endFight(currentEnemy)) {
                 player.HP = player.MAX_HP
                 player.AP = player.MAX_AP
-                player.EXP += currentEnemy.EXPGiven
+                player.EXP.value += currentEnemy.EXPGiven
                 player.gold += currentEnemy.goldGiven
                 player.actionQueue.clear()
                 bottomBarCheck = true

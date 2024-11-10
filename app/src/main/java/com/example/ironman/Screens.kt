@@ -50,6 +50,8 @@ sealed class Screens(val route: String) {
     object  SkillScreen : Screens("SkillScreen")
     object  SettingsScreen : Screens("SettingsScreen")
     object  FightScreen : Screens("FightScreen")
+    object  LevelUpScreen : Screens("LevelUpScreen")
+    object  CharacterCreationScreen : Screens("CharacterCreationScreen")
     object  EndScreen : Screens("EndScreen")
 }
 
@@ -115,20 +117,28 @@ fun BottomNavGraph(navController: NavHostController){
         navController = navController,
         startDestination = Screens.MainMenuScreen.route
     ) {
-        composable(route = Screens.MainMapScreen.route){ MainMapScreen{navController.navigate(Screens.FightScreen.route)} }
-        composable(route = Screens.MainMenuScreen.route){ MainMenuScreen(OnMainMapScreen = { navController.navigate(Screens.MainMapScreen.route) }, context = LocalContext.current) }
+        composable(route = Screens.MainMapScreen.route){ MainMapScreen({ navController.navigate(Screens.FightScreen.route) },
+            { navController.navigate(Screens.FightScreen.route) }) }
+        composable(route = Screens.MainMenuScreen.route){ MainMenuScreen(onCharacterCreationScreen = { navController.navigate(Screens.CharacterCreationScreen.route) }, context = LocalContext.current) }
+        composable(route = Screens.CharacterCreationScreen.route){ CharacterCreationScreen(onMainMapScreen = { navController.navigate(Screens.MainMapScreen.route) }, context = LocalContext.current) }
         composable(route = Screens.CharacterScreen.route){ CharacterScreen() }
         composable(route = Screens.InventoryScreen.route){ InventoryScreen() }
         composable(route = Screens.SkillScreen.route){ SkillScreen(){
             player.updateDeck()
         } }
         composable(route = Screens.MainMapScreen.route){
-            MainMapScreen{navController.navigate(Screens.FightScreen.route)}
+            MainMapScreen({navController.navigate(Screens.FightScreen.route) },
+                {navController.navigate(Screens.LevelUpScreen.route)})
         }
         composable(route = Screens.SettingsScreen.route){ SettingsScreen() }
         composable(route = Screens.FightScreen.route){ FightScreen(
             onMap = { navController.popBackStack() },
         ) }
+        composable(route = Screens.LevelUpScreen.route) {
+            LevelUpScreen(
+                onMap = { navController.popBackStack() }
+            )
+        }
     }
 }
 

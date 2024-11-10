@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -33,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -107,10 +109,13 @@ data class Room(
 
 @SuppressLint("SuspiciousIndentation")
 @Composable
-fun MainMapScreen(onFightScreen: () -> Unit) {
+fun MainMapScreen(onFightScreen: () -> Unit, onLevelUpScreen: () -> Unit) {
     val map = remember { generatedMap.map }
     val showDialog = remember { mutableStateOf(false) }
     val context = LocalContext.current
+
+    val pHP = remember { player.HP }
+    val pEXP = remember { player.EXP }
 
     val horizontalScrollState = rememberScrollState()
     val verticalScrollState = rememberScrollState()
@@ -145,6 +150,18 @@ fun MainMapScreen(onFightScreen: () -> Unit) {
         contentAlignment = Alignment.Center
     ){}
 
+    Row(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(verticalScrollState),
+        verticalAlignment = Alignment.Top,
+        horizontalArrangement = Arrangement.Start
+    ){
+        Column {
+            StatusBar(status = pHP, max = player.MAX_HP.value.toFloat(), barColor = Color.Red)
+            StatusBar(status = pEXP, max = player.EXPtoLv.toFloat(), barColor = Color.Cyan)
+        }
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -153,6 +170,15 @@ fun MainMapScreen(onFightScreen: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Row {
+            Button(
+                onClick =
+                {
+                    if (player.levelUp()) { onLevelUpScreen() }
+                },
+                modifier = Modifier.size(width = 130.dp, height = 80.dp)
+            ) {
+                Text("LEVEL UP")
+            }
             Button(
                 onClick =
                 {
@@ -410,7 +436,10 @@ fun SmallRoom(mapTileIcon: Int, onClickAction: () -> Unit, i: Int, j: Int)
     }
 
     Box(
-        modifier = Modifier.size(65.dp).alpha(alpha).then(clickableModifier),
+        modifier = Modifier
+            .size(65.dp)
+            .alpha(alpha)
+            .then(clickableModifier),
     ) {
         Image(
             painter = painterResource(id = mapTileIcon),
@@ -515,7 +544,10 @@ fun BigRoom(mapTileIcon: Int, onClickAction: () -> Unit, i: Int, j: Int)
     }
 
     Box(
-        modifier = Modifier.size(110.dp).alpha(alpha).then(clickableModifier),
+        modifier = Modifier
+            .size(110.dp)
+            .alpha(alpha)
+            .then(clickableModifier),
     ) {
         Image(
             painter = painterResource(id = mapTileIcon),

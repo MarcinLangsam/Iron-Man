@@ -36,6 +36,12 @@ class MainActivity : ComponentActivity() {
                     WeaponsList["Siewca Smierci"]?.let { player.inventoryWeapons.add(it) }
                     WeaponsList["Grzech Kaplana"]?.let { player.inventoryWeapons.add(it) }
                     WeaponsList["Topor wojownika"]?.let { player.inventoryWeapons.add(it) }
+                    WeaponsList["Skorzany Pancerz"]?.let { player.inventoryWeapons.add(it) }
+                    WeaponsList["Srebrny Pierscien"]?.let { player.inventoryWeapons.add(it) }
+                    WeaponsList["Amulet Precyzji"]?.let { player.inventoryWeapons.add(it) }
+                    WeaponsList["Drewniana Tarcza"]?.let { player.inventoryWeapons.add(it) }
+                    WeaponsList["Helm"]?.let { player.inventoryWeapons.add(it) }
+                    WeaponsList["Buty"]?.let { player.inventoryWeapons.add(it) }
 
                     RunesList["Runa sily"]?.let { player.inventoryRunes.add(it) }
                     RunesList["Runa inteligencji"]?.let { player.inventoryRunes.add(it) }

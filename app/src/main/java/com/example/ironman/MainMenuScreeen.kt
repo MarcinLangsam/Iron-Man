@@ -20,7 +20,7 @@ import androidx.compose.runtime.remember
 import java.io.File
 
 @Composable
-fun MainMenuScreen(OnMainMapScreen: () -> Unit, context: Context) {
+fun MainMenuScreen(onCharacterCreationScreen: () -> Unit, context: Context) {
     /*val saveFileName = "savegame.txt"
     val saveFile = File(context.filesDir, saveFileName)
     val saveExists = remember { saveFile.exists() }
@@ -63,7 +63,7 @@ fun MainMenuScreen(OnMainMapScreen: () -> Unit, context: Context) {
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier
                         .padding(vertical = 8.dp)
-                        .clickable { OnMainMapScreen() }
+                        .clickable { onCharacterCreationScreen() }
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
