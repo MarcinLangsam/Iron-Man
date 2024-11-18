@@ -24,9 +24,7 @@ class MainActivity : ComponentActivity() {
                     cards["Rozpłatanie"]?.let { player.addCard(it) }
                     cards["Leczenie"]?.let { player.addCard(it) }
                     cards["Odsapka"]?.let { player.addCard(it) }
-                    cards["Trafienie Krytyczne"]?.let { player.addCard(it) }
                     cards["Nakładanie Rąk"]?.let { player.addCard(it) }
-                    cards["Deszcz Ognia"]?.let { player.addCard(it) }
                     cards["Grzmot"]?.let { player.addCard(it) }
 
                     player.updateDeck()

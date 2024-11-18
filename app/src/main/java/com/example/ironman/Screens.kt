@@ -100,6 +100,11 @@ fun Navigation() {
         }
     }
 
+    when (navBackStackEntry?.destination?.route) {
+        "CharacterCreationScreen" -> {
+            bottomBarState.value = false
+        }
+    }
 
 
     Scaffold(

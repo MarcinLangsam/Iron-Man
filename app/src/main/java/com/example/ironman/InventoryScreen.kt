@@ -219,6 +219,7 @@ fun InventoryScreen() {
     val playerInfo by remember {
         derivedStateOf {
             listOf(
+                "Rasa: " + player.rase,
                 player.name,
                 "Poziom: " + player.lv.toString(),
                 "EXP: " + player.EXP.value.toString() + "/" + player.EXPtoLv.toString(),

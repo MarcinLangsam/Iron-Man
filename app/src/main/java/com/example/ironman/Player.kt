@@ -12,9 +12,15 @@ public class Player (
     var STR: Int,
     var VIT: Int,
     var DEX: Int,
-    var INT: Int
+    var INT: Int,
+
 )
 {
+    var healthDice = 10
+    var skillPoint = 1
+    var rase = ""
+    var profesions = mutableListOf<Profesions>()
+    var portrait = 0
     var MAX_HP = mutableStateOf(VIT*10)
     var HP = mutableStateOf(VIT*10)
     var MAX_AP = mutableStateOf((DEX/5)+100)
@@ -22,6 +28,8 @@ public class Player (
     var EXP = mutableStateOf(0)
     var EXPtoLv = 100 * lv
     var AP_recovery = 2
+    var attackPerRound = 1
+
     var actionQueue = mutableStateListOf<Card>()
     var mainDeck = mutableListOf<Card>()
     var temporaryDeck = mutableListOf<Card>()
@@ -286,6 +294,11 @@ public class Player (
         }
     }
 
+    fun removeCard(card: Card) {
+        mainDeck.remove(card)
+        temporaryDeck.remove(card)
+    }
+
     fun toSerializablePlayer(): SerializablePlayer {
         return SerializablePlayer(
             name, lv, STR, VIT, DEX, INT, MAX_HP.value, HP.value, MAX_AP.value, AP.value, EXP.value, EXPtoLv, AP_recovery,
@@ -300,38 +313,46 @@ public class Player (
         )
     }
 
+    fun resetPlayer(){
+        player.skillPoint = 1
+        player.STR = 10
+        player.VIT = 10
+        player.DEX = 10
+        player.INT = 10
+    }
 
-        fun loadPlayer(serializablePlayer: SerializablePlayer) {
-            player.inventoryRunes.clear()
-            player.inventoryWeapons.clear()
-            player.deequipAllRune()
 
-            player.runesActive.clear()
-            player.runesActive = MutableList(8){ Rune("Brak Runy", {},{}, mutableStateOf(R.drawable.empty_slot),"Brak Runy",false)}
+    fun loadPlayer(serializablePlayer: SerializablePlayer) {
+        player.inventoryRunes.clear()
+        player.inventoryWeapons.clear()
+        player.deequipAllRune()
 
-            player.name = serializablePlayer.name
-            player.lv = serializablePlayer.lv
-            player.STR = serializablePlayer.STR
-            player.DEX = serializablePlayer.DEX
-            player.VIT = serializablePlayer.VIT
-            player.INT = serializablePlayer.INT
-            player.MAX_HP.value = serializablePlayer.MAX_HP
-            player.HP.value = serializablePlayer.HP
-            player.MAX_AP.value = serializablePlayer.MAX_AP
-            player.AP.value = serializablePlayer.AP
-            player.EXP.value = serializablePlayer.EXP
-            player.EXPtoLv = serializablePlayer.EXPtoLv
-            player.AP_recovery = serializablePlayer.AP_recovery
-            player.mainDeck = serializablePlayer.mainDeck.map { getCardByName(it) }.toMutableList()
-            player.temporaryDeck = serializablePlayer.temporaryDeck.map { getCardByName(it) }.toMutableList()
-            player.weapon = getWeaponByName(serializablePlayer.weapon)
-            player.runesActive = serializablePlayer.runesActive.map { getRuneByName(it) }.toMutableList()
-            player.maxRunes.value = serializablePlayer.maxRunes
-            player.inventoryWeapons = serializablePlayer.inventoryWeapons.map { getWeaponByName(it) }.toMutableList()
-            player.inventoryRunes = serializablePlayer.inventoryRunes.map { getRuneByName(it) }.toMutableList()
-            player.gold = serializablePlayer.gold
+        player.runesActive.clear()
+        player.runesActive = MutableList(8){ Rune("Brak Runy", {},{}, mutableStateOf(R.drawable.empty_slot),"Brak Runy",false)}
 
-        }
+        player.name = serializablePlayer.name
+        player.lv = serializablePlayer.lv
+        player.STR = serializablePlayer.STR
+        player.DEX = serializablePlayer.DEX
+        player.VIT = serializablePlayer.VIT
+        player.INT = serializablePlayer.INT
+        player.MAX_HP.value = serializablePlayer.MAX_HP
+        player.HP.value = serializablePlayer.HP
+        player.MAX_AP.value = serializablePlayer.MAX_AP
+        player.AP.value = serializablePlayer.AP
+        player.EXP.value = serializablePlayer.EXP
+        player.EXPtoLv = serializablePlayer.EXPtoLv
+        player.AP_recovery = serializablePlayer.AP_recovery
+        player.mainDeck = serializablePlayer.mainDeck.map { getCardByName(it) }.toMutableList()
+        player.temporaryDeck = serializablePlayer.temporaryDeck.map { getCardByName(it) }.toMutableList()
+        player.weapon = getWeaponByName(serializablePlayer.weapon)
+        player.runesActive = serializablePlayer.runesActive.map { getRuneByName(it) }.toMutableList()
+        player.maxRunes.value = serializablePlayer.maxRunes
+        player.inventoryWeapons = serializablePlayer.inventoryWeapons.map { getWeaponByName(it) }.toMutableList()
+        player.inventoryRunes = serializablePlayer.inventoryRunes.map { getRuneByName(it) }.toMutableList()
+        player.gold = serializablePlayer.gold
+
+    }
 }
 
 @Serializable

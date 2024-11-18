@@ -158,6 +158,11 @@ fun MainMapScreen(onFightScreen: () -> Unit, onLevelUpScreen: () -> Unit) {
         horizontalArrangement = Arrangement.Start
     ){
         Column {
+            Image(
+                painter = painterResource(id = player.portrait),
+                contentDescription = "Portret gracza",
+                modifier = Modifier.size(50.dp)
+            )
             StatusBar(status = pHP, max = player.MAX_HP.value.toFloat(), barColor = Color.Red)
             StatusBar(status = pEXP, max = player.EXPtoLv.toFloat(), barColor = Color.Cyan)
         }
@@ -170,7 +175,7 @@ fun MainMapScreen(onFightScreen: () -> Unit, onLevelUpScreen: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Row {
-            Button(
+            /*Button(
                 onClick =
                 {
                     if (player.levelUp()) { onLevelUpScreen() }
@@ -178,7 +183,7 @@ fun MainMapScreen(onFightScreen: () -> Unit, onLevelUpScreen: () -> Unit) {
                 modifier = Modifier.size(width = 130.dp, height = 80.dp)
             ) {
                 Text("LEVEL UP")
-            }
+            }*/
             Button(
                 onClick =
                 {
