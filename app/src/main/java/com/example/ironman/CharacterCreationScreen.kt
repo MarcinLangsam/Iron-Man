@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.snapping.SnapPosition
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,9 +16,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,7 +28,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import kotlin.reflect.KMutableProperty0
 
 @Composable
 fun CharacterCreationScreen(onMainMapScreen: () -> Unit, context: Context){
@@ -202,64 +200,67 @@ fun ProfesionComponent(){
 @Composable
 fun AttributeComponent() {
     var attributesPoits by remember { mutableStateOf(5) }
-    var pSTR by remember { mutableStateOf(player.STR) }
-    var pVIT by remember { mutableStateOf(player.VIT) }
-    var pDEX by remember { mutableStateOf(player.DEX) }
-    var pINT by remember { mutableStateOf(player.INT) }
+    var pSTR = remember { mutableStateOf(player.STR) }
+    var pVIT = remember { mutableStateOf(player.VIT) }
+    var pDEX = remember { mutableStateOf(player.DEX) }
+    var pINT = remember { mutableStateOf(player.INT) }
 
-    fun updateAttribute(attribute: (Int) -> Unit, currentValue: Int, value: Int)
+    fun updateAttribute(attribute: (Int) -> Unit, currentValue: MutableState<Int>, value: Int) : Boolean
     {
         if(value == -1)
         {
-            if(currentValue > 10)
+            if(currentValue.value > 10)
             {
-                attribute(currentValue + value)
+                attribute(currentValue.value + value)
                 attributesPoits += 1
+                return true
             }
         }
         else {
             if (attributesPoits > 0) {
-                attribute(currentValue + value)
+                attribute(currentValue.value + value)
                 attributesPoits -= 1
+                return true;
             }
         }
+        return false
     }
 
     Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.Start) {
         Text("Punkty do wydania: $attributesPoits")
         Row(modifier = Modifier.padding(3.dp)) {
-            Text("Siła $pSTR")
-            Button(onClick = { updateAttribute({ pSTR = it }, pSTR, +1) }, modifier = Modifier.width(50.dp).height(35.dp)) {
+            Text("Siła ${pSTR.value}")
+            Button(onClick = { if(updateAttribute({ pSTR.value = it }, pSTR, +1)){ player.STR += 1} }, modifier = Modifier.width(50.dp).height(35.dp)) {
                 Text("+")
             }
-            Button(onClick = { updateAttribute({ pSTR = it }, pSTR, -1) }, modifier = Modifier.width(50.dp).height(35.dp)) {
+            Button(onClick = { if(updateAttribute({ pSTR.value = it }, pSTR, -1)){ player.STR -= 1} }, modifier = Modifier.width(50.dp).height(35.dp)) {
                 Text("-")
             }
         }
         Row {
-            Text("Kondycja $pVIT")
-            Button(onClick = { updateAttribute({ pVIT = it }, pVIT, +1) }, modifier = Modifier.width(50.dp).height(35.dp)) {
+            Text("Kondycja ${pVIT.value}")
+            Button(onClick = { if(updateAttribute({ pVIT.value = it }, pVIT, +1)){ player.VIT += 1} }, modifier = Modifier.width(50.dp).height(35.dp)) {
                 Text("+")
             }
-            Button(onClick = { updateAttribute({ pVIT = it }, pVIT, -1) }, modifier = Modifier.width(50.dp).height(35.dp)) {
+            Button(onClick = { if(updateAttribute({ pVIT.value = it }, pVIT, -1)){ player.VIT -= 1} }, modifier = Modifier.width(50.dp).height(35.dp)) {
                 Text("-")
             }
         }
         Row {
-            Text("Zręczność $pDEX")
-            Button(onClick = { updateAttribute({ pDEX = it }, pDEX, +1) }, modifier = Modifier.width(50.dp).height(35.dp)) {
+            Text("Zręczność ${pDEX.value}")
+            Button(onClick = { if(updateAttribute({ pDEX.value = it }, pDEX, +1)){ player.DEX += 1} }, modifier = Modifier.width(50.dp).height(35.dp)) {
                 Text("+")
             }
-            Button(onClick = { updateAttribute({ pDEX = it }, pDEX, -1) }, modifier = Modifier.width(50.dp).height(35.dp)) {
+            Button(onClick = { if(updateAttribute({ pDEX.value = it }, pDEX, -1)){ player.DEX -= 1} }, modifier = Modifier.width(50.dp).height(35.dp)) {
                 Text("-")
             }
         }
         Row {
-            Text("Inteligencja $pINT")
-            Button(onClick = { updateAttribute({ pINT = it }, pINT, +1) }, modifier = Modifier.width(50.dp).height(35.dp)) {
+            Text("Inteligencja ${pINT.value}")
+            Button(onClick = { if(updateAttribute({ pINT.value = it }, pINT, +1)){ player.INT += 1} }, modifier = Modifier.width(50.dp).height(35.dp)) {
                 Text("+")
             }
-            Button(onClick = { updateAttribute({ pINT = it }, pINT, -1) }, modifier = Modifier.width(50.dp).height(35.dp)) {
+            Button(onClick = { if(updateAttribute({ pINT.value = it }, pINT, -1)){ player.INT -= 1} }, modifier = Modifier.width(50.dp).height(35.dp)) {
                 Text("-")
             }
         }

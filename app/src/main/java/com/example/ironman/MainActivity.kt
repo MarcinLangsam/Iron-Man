@@ -1,6 +1,7 @@
 package com.example.ironman
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,8 +28,16 @@ class MainActivity : ComponentActivity() {
                     cards["Nakładanie Rąk"]?.let { player.addCard(it) }
                     cards["Grzmot"]?.let { player.addCard(it) }
 
-                    player.updateDeck()
-                    player.rollFullHand()
+                    modifiers["Wzmocnienie"]?.let { player.addModifier(it) }
+
+                    //player.updateDeck()
+                    //player.rollFullHand()
+
+                    player.updateDeckModfiers()
+                    player.rollFullHandModifiers()
+                    Log.d("", "HALO TUTAJ")
+                    Log.d("", player.cardsOnHand.size.toString())
+                    Log.d("", player.modifiersOnHand.size.toString())
 
 
                     WeaponsList["Siewca Smierci"]?.let { player.inventoryWeapons.add(it) }

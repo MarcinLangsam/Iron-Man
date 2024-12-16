@@ -1,6 +1,7 @@
 package com.example.ironman
 
 import android.annotation.SuppressLint
+import android.util.Log
 import android.view.MotionEvent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -51,7 +52,9 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-var queuedCardIndex = mutableListOf<Int>()
+var activeCard = mutableListOf<Card>()
+var maxModifier = 0
+var queuedModifierIndex = mutableListOf<Int>()
 var currentEnemy = szkielet
 var moveToTarget = false
 var bottomBarCheck = true
@@ -108,22 +111,40 @@ fun useCardEnemy(card: EnemyCards) : Int
     return card.effect.invoke(currentEnemy)
 }
 
-fun addCardToQueue(card: Card)
+fun addModifierToCard(modifier: com.example.ironman.Modifier)
 {
-    if(player.actionQueue.size < 3)
+    if(maxModifier > 0)
     {
-        player.actionQueue.add(card)
-        player.AP.value -= card.AP_required
+        if(player.modiferQueue.size < activeCard[0].modifiersSlots){ player.modiferQueue.add(modifier) }
+    }
+}
+
+fun popModifierFromCard()
+{
+    if (player.modiferQueue.isNotEmpty()) {
+        player.modiferQueue.removeFirst()
+        //player.AP.value += popedModifier.AP_required
     }
 
 }
 
-fun popCardFromQueue()
+fun setActiveCard(card: Card)
 {
-    if (player.actionQueue.isNotEmpty()) {
-        val popedCard = player.actionQueue.removeLast()
-        player.AP.value += popedCard.AP_required
+    activeCard.clear()
+    activeCard.add(card)
+    maxModifier = card.modifiersSlots
+}
+
+fun resetActiveCard()
+{
+    if(player.modiferQueue.isNotEmpty()){
+        while(player.modiferQueue.isEmpty())
+        {
+            popModifierFromCard()
+        }
     }
+    activeCard.clear()
+    maxModifier = 0
 
 }
 
@@ -131,21 +152,22 @@ fun popCardFromQueue()
 @Composable
 fun FightScreen(onMap: () -> Unit){
 
-    val visibleButtons = remember { mutableStateListOf(true, true, true, true, true) }
-    val onClickActions = remember {
-        listOf<() -> Unit>(
-            { addCardToQueue(player.on_hand[0]); if(queuedCardIndex.size<3){visibleButtons[0] = false; queuedCardIndex.add(0)} },
-            { addCardToQueue(player.on_hand[1]); if(queuedCardIndex.size<3){visibleButtons[1] = false; queuedCardIndex.add(1)} },
-            { addCardToQueue(player.on_hand[2]); if(queuedCardIndex.size<3){visibleButtons[2] = false; queuedCardIndex.add(2)} },
-            { addCardToQueue(player.on_hand[3]); if(queuedCardIndex.size<3){visibleButtons[3] = false; queuedCardIndex.add(3)} },
-            { addCardToQueue(player.on_hand[4]); if(queuedCardIndex.size<3){visibleButtons[4] = false; queuedCardIndex.add(4)} },
+    val isModifierVisible = remember { mutableStateListOf(true, true, true, true, true) }
+    val modifiersOnClickFunction = remember {
+        listOf(
+            { addModifierToCard(player.modifiersOnHand[0]); if(queuedModifierIndex.size < maxModifier){isModifierVisible[0] = false; queuedModifierIndex.add(0)} },
+            { addModifierToCard(player.modifiersOnHand[1]); if(queuedModifierIndex.size < maxModifier){isModifierVisible[1] = false; queuedModifierIndex.add(1)} },
+            { addModifierToCard(player.modifiersOnHand[2]); if(queuedModifierIndex.size < maxModifier){isModifierVisible[2] = false; queuedModifierIndex.add(2)} },
+            { addModifierToCard(player.modifiersOnHand[3]); if(queuedModifierIndex.size < maxModifier){isModifierVisible[3] = false; queuedModifierIndex.add(3)} },
+            { addModifierToCard(player.modifiersOnHand[4]); if(queuedModifierIndex.size < maxModifier){isModifierVisible[4] = false; queuedModifierIndex.add(4)} },
         )
     }
 
-    val actionQueue = remember { player.actionQueue }
+    val modifierQueue = remember { player.modiferQueue }
     val pHP = remember { player.HP }
     val pAP = remember { player.AP }
     val eHP = remember { currentEnemy.HP }
+    val activeCard = remember { activeCard }
 
 
     var moveToTarget by remember { mutableStateOf(moveToTarget) }
@@ -239,15 +261,15 @@ fun FightScreen(onMap: () -> Unit){
 
             for (i in 0..4 )
             {
-                if(!visibleButtons[i])
+                if(!isModifierVisible[i])
                 {
-                    player.rollOneOnHandAt(i)
-                    visibleButtons[i] = true
+                    player.rollOneOnHandAtModifiers(i)
+                    isModifierVisible[i] = true
                 }
             }
             player.AP.value += player.AP_recovery
             player.actionQueue.clear()
-            queuedCardIndex.clear()
+            queuedModifierIndex.clear()
             moveToTarget = false
             hideBeginTurn = false
         }
@@ -274,13 +296,27 @@ fun FightScreen(onMap: () -> Unit){
         verticalArrangement = Arrangement.Top
     ) {
 
-        StatusBar(status = pHP, max = player.MAX_HP.value.toFloat(), barColor = Color.Red)
-        StatusBar(status = pAP, max = player.MAX_AP.value.toFloat(), barColor = Color.Green)
-        Row{
-            QueuedCardButton(actionQueue,0, visibleButtons)
-            QueuedCardButton(actionQueue,1, visibleButtons)
-            QueuedCardButton(actionQueue,2, visibleButtons)
+        Row {
+            Column {
+                StatusBar(status = pHP, max = player.MAX_HP.value.toFloat(), barColor = Color.Red)
+                StatusBar(status = pAP, max = player.MAX_AP.value.toFloat(), barColor = Color.Green)
+            }
+
+            ActiveCardButton(if (activeCard.size>0) activeCard[0].sprite else R.drawable.empty_slot)
+            if(activeCard.isNotEmpty()) {
+                repeat(activeCard[0].modifiersSlots) { index ->
+                    QueuedModifierButton(modifierQueue, index, isModifierVisible)
+                }
+            }
+
             DamagePopUp(damageVisible = damageVisible, damagePosition = damagePosition, damageText = damageText, color = damageColor)
+        }
+        Column {
+            repeat(isModifierVisible.size) { index ->
+                if (isModifierVisible[index]) {
+                    Modifier_Button(onClickAction = modifiersOnClickFunction[index], skillDescription = player.modifiersOnHand[index].descriptionFight, sprite = player.modifiersOnHand[index].sprite, spriteHold = player.modifiersOnHand[index].spriteHold)
+                }
+            }
         }
         BattleSprite(xOffset = xOffsetPlayer.value.dp+150.dp, yOffset = yOffsetPlayer.value.dp-50.dp, sprite = R.drawable.player)
 
@@ -324,19 +360,78 @@ fun FightScreen(onMap: () -> Unit){
     {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Row {
-                BeginTurn(actionQueue = actionQueue, hideBeginTurn = hideBeginTurn) { moveToTarget = !moveToTarget }
+                BeginTurn(activeCard = activeCard, hideBeginTurn = hideBeginTurn) { moveToTarget = !moveToTarget }
             }
             Row {
-                repeat(visibleButtons.size) { index ->
-                    if (visibleButtons[index]) {
-                        Card_Button(onClickAction = onClickActions[index], skillDescription = player.on_hand[index].descriptionFight, sprite = player.on_hand[index].sprite, spriteHold = player.on_hand[index].spriteHold)
-                    }
+                repeat(player.cardsOnHand.size) { index ->
+                    Card_Button(onClickAction = {setActiveCard(player.cardsOnHand[index])}, skillDescription = player.cardsOnHand[index].descriptionFight, sprite = player.cardsOnHand[index].sprite, spriteHold = player.cardsOnHand[index].spriteHold)
                 }
             }
+            //Row {
+
+            //}
         }
     }
 }
 
+
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+fun Modifier_Button(onClickAction: () -> Unit, skillDescription: String, sprite: Int, spriteHold: Int) {
+    var isHeld by remember { mutableStateOf(false) }
+    var isLongPress by remember { mutableStateOf(false) }
+    var currentWidth by remember { mutableStateOf(50.dp) }
+    var currentDescription by remember { mutableStateOf("") }
+
+    val scope = rememberCoroutineScope()
+
+    Box(
+        modifier = Modifier
+            .height(50.dp)
+            .width(currentWidth)
+            .padding(3.dp)
+            .pointerInteropFilter { event ->
+                when (event.action) {
+                    MotionEvent.ACTION_DOWN -> {
+                        isHeld = true
+                        isLongPress = false
+                        scope.launch {
+                            currentWidth= 250.dp
+                            currentDescription = skillDescription
+                            delay(500)
+                            if (isHeld) {
+                                isLongPress = true
+                            }
+                        }
+                        true
+                    }
+
+                    MotionEvent.ACTION_UP -> {
+                        if (!isLongPress) {
+                            onClickAction.invoke()
+                        }
+                        isHeld = false
+                        currentWidth = 50.dp
+                        currentDescription = ""
+                        true
+                    }
+
+                    else -> false
+                }
+            }
+    ) {
+        Image(
+            painter = painterResource(id = if (isHeld) sprite else sprite),
+            contentDescription = "Image",
+            modifier = Modifier.fillMaxSize()
+        )
+        Text(
+            text = currentDescription,
+            modifier = Modifier.offset(60.dp,0.dp),
+            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+        )
+    }
+}
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -396,23 +491,46 @@ fun Card_Button(onClickAction: () -> Unit, skillDescription: String, sprite: Int
     }
 }
 
+
 @Composable
-fun QueuedCardButton(actionQueue: MutableList<Card>, index: Int, visibleButtons: SnapshotStateList<Boolean>)
+fun ActiveCardButton(sprite: Int)
 {
-    val buttonSprite = if (actionQueue.size > index) actionQueue[index].sprite else R.drawable.empty_slot
+    Box(
+        modifier = Modifier
+            .width(55.dp)
+            .height(55.dp)
+            .padding(2.dp)
+            .clickable { if (activeCard.isNotEmpty())
+                { resetActiveCard() }
+            },
+    ) {
+        Image(
+            painter = painterResource(id = sprite),
+            contentDescription = "Image",
+            modifier = Modifier
+                .fillMaxSize(),
+            contentScale = ContentScale.FillHeight
+        )
+    }
+}
+
+@Composable
+fun QueuedModifierButton(modifierQueue: MutableList<com.example.ironman.Modifier>, index: Int, visibleButtons: SnapshotStateList<Boolean>)
+{
+    val buttonSprite = if (modifierQueue.size > index) modifierQueue[index].sprite else R.drawable.empty_slot
 
     Box(
         modifier = Modifier
-            .width(45.dp)
-            .height(55.dp)
+            .width(40.dp)
+            .height(40.dp)
             .padding(2.dp)
-            .clickable { if (actionQueue.size > index)
-            {
-                popCardFromQueue()
-                visibleButtons[queuedCardIndex.first()] = true
-                queuedCardIndex.removeFirst()
-            }
-    },
+            .clickable {
+                if (modifierQueue.isNotEmpty()) {
+                    popModifierFromCard()
+                    visibleButtons[queuedModifierIndex.first()] = true
+                    queuedModifierIndex.removeFirst()
+                }
+            },
     ) {
         Image(
             painter = painterResource(id = buttonSprite),
@@ -425,8 +543,8 @@ fun QueuedCardButton(actionQueue: MutableList<Card>, index: Int, visibleButtons:
 }
 
 @Composable
-fun BeginTurn(actionQueue: MutableList<Card>, hideBeginTurn: Boolean, moveToTarget: () -> Unit) {
-    val isVisible = actionQueue.size > 0 && !hideBeginTurn
+fun BeginTurn(activeCard: MutableList<Card>, hideBeginTurn: Boolean, moveToTarget: () -> Unit) {
+    val isVisible = activeCard.size > 0 && !hideBeginTurn
     val darkRed = Color(0xFF8B0000)
 
     if (isVisible) {

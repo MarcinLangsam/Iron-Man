@@ -3,10 +3,13 @@ package com.example.ironman
 import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.toMutableStateList
 import kotlinx.serialization.Serializable
-import kotlin.math.max
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import java.io.File
 
-public class Player (
+class Player (
     var name: String,
     var lv: Int,
     var STR: Int,
@@ -20,7 +23,7 @@ public class Player (
     var skillPoint = 1
     var rase = ""
     var profesions = mutableListOf<Profesions>()
-    var portrait = 0
+    var portrait = R.drawable.portrait1
     var MAX_HP = mutableStateOf(VIT*10)
     var HP = mutableStateOf(VIT*10)
     var MAX_AP = mutableStateOf((DEX/5)+100)
@@ -28,12 +31,19 @@ public class Player (
     var EXP = mutableStateOf(0)
     var EXPtoLv = 100 * lv
     var AP_recovery = 2
-    var attackPerRound = 1
+    var cardsSlots = 2
 
     var actionQueue = mutableStateListOf<Card>()
-    var mainDeck = mutableListOf<Card>()
-    var temporaryDeck = mutableListOf<Card>()
-    var on_hand = mutableListOf<Card>()
+    var modiferQueue = mutableStateListOf<Modifier>()
+    var mainDeck = mutableStateListOf<Card>()
+    //var temporaryDeck = mutableListOf<Card>()
+    var cardsOnHand = mutableStateListOf<Card>()
+
+    var mainDeckModifiers = mutableListOf<Modifier>()
+    var temporaryDeckModifiers = mutableListOf<Modifier>()
+    var modifiersOnHand = mutableListOf<Modifier>()
+
+
 
     var weapon = Weapon("Brak", {player.weaponDamage+=0},{player.weaponDamage-=0},0,mutableStateOf(R.drawable.empty_slot),"","empty")
     var weaponSprite = weapon.sprite
@@ -81,36 +91,58 @@ public class Player (
         damage = weaponDamage+STR
     }
 
-    fun updateDeck()
+    fun addCard(card: Card) {
+        val existingCard = mainDeck.find { it.name == card.name }
+        if (existingCard != null) {
+            existingCard.number += 1
+        } else {
+            mainDeck.add(card)
+            //temporaryDeck.add(card)
+        }
+    }
+    fun removeCard(card: Card) {
+        mainDeck.remove(card)
+    }
+
+    //handle modifiers cards functions
+    fun updateDeckModfiers()
     {
-        temporaryDeck.clear()
-        for (card in mainDeck)
+        temporaryDeckModifiers.clear()
+        for (modifier in mainDeckModifiers)
         {
-            if (card.isActive)
+            if (modifier.isActive)
             {
-                temporaryDeck.add(card)
+                temporaryDeckModifiers.add(modifier)
             }
         }
-
-        for (card in temporaryDeck)
-        {
-            Log.d("",card.name)
-        }
     }
-
-    fun rollFullHand()
+    fun rollFullHandModifiers()
     {
-        on_hand.clear()
+        modifiersOnHand.clear()
         for (i in 1..5)
         {
-            on_hand.add(temporaryDeck.random())
+            modifiersOnHand.add(temporaryDeckModifiers.random())
         }
     }
-    fun rollOneOnHandAt(index: Int)
+    fun rollOneOnHandAtModifiers(index: Int)
     {
-        on_hand[index] = temporaryDeck.random()
+        modifiersOnHand[index] = temporaryDeckModifiers.random()
+    }
+    fun addModifier(modifier: Modifier) {
+        val existingCard = mainDeckModifiers.find { it.name == modifier.name }
+        if (existingCard != null) {
+            existingCard.number += 1
+        } else {
+            mainDeckModifiers.add(modifier)
+            temporaryDeckModifiers.add(modifier)
+        }
+    }
+    fun removeModifier(modifier: Modifier) {
+        mainDeckModifiers.remove(modifier)
+        temporaryDeckModifiers.remove(modifier)
     }
 
+    //handle equipment
     fun equipWeapon(equipWeapon: Weapon)
     {
         if (equipWeapon.type == "weapon")
@@ -284,74 +316,12 @@ public class Player (
         }
     }
 
-    fun addCard(card: Card) {
-        val existingCard = mainDeck.find { it.name == card.name }
-        if (existingCard != null) {
-            existingCard.number += 1
-        } else {
-            mainDeck.add(card)
-            temporaryDeck.add(card)
-        }
-    }
-
-    fun removeCard(card: Card) {
-        mainDeck.remove(card)
-        temporaryDeck.remove(card)
-    }
-
-    fun toSerializablePlayer(): SerializablePlayer {
-        return SerializablePlayer(
-            name, lv, STR, VIT, DEX, INT, MAX_HP.value, HP.value, MAX_AP.value, AP.value, EXP.value, EXPtoLv, AP_recovery,
-            mainDeck.map { it.name },
-            temporaryDeck.map { it.name },
-            weapon.name,
-            runesActive.map { it.name },
-            maxRunes.value,
-            inventoryWeapons.map { it.name },
-            inventoryRunes.map { it.name },
-            gold
-        )
-    }
-
     fun resetPlayer(){
         player.skillPoint = 1
         player.STR = 10
         player.VIT = 10
         player.DEX = 10
         player.INT = 10
-    }
-
-
-    fun loadPlayer(serializablePlayer: SerializablePlayer) {
-        player.inventoryRunes.clear()
-        player.inventoryWeapons.clear()
-        player.deequipAllRune()
-
-        player.runesActive.clear()
-        player.runesActive = MutableList(8){ Rune("Brak Runy", {},{}, mutableStateOf(R.drawable.empty_slot),"Brak Runy",false)}
-
-        player.name = serializablePlayer.name
-        player.lv = serializablePlayer.lv
-        player.STR = serializablePlayer.STR
-        player.DEX = serializablePlayer.DEX
-        player.VIT = serializablePlayer.VIT
-        player.INT = serializablePlayer.INT
-        player.MAX_HP.value = serializablePlayer.MAX_HP
-        player.HP.value = serializablePlayer.HP
-        player.MAX_AP.value = serializablePlayer.MAX_AP
-        player.AP.value = serializablePlayer.AP
-        player.EXP.value = serializablePlayer.EXP
-        player.EXPtoLv = serializablePlayer.EXPtoLv
-        player.AP_recovery = serializablePlayer.AP_recovery
-        player.mainDeck = serializablePlayer.mainDeck.map { getCardByName(it) }.toMutableList()
-        player.temporaryDeck = serializablePlayer.temporaryDeck.map { getCardByName(it) }.toMutableList()
-        player.weapon = getWeaponByName(serializablePlayer.weapon)
-        player.runesActive = serializablePlayer.runesActive.map { getRuneByName(it) }.toMutableList()
-        player.maxRunes.value = serializablePlayer.maxRunes
-        player.inventoryWeapons = serializablePlayer.inventoryWeapons.map { getWeaponByName(it) }.toMutableList()
-        player.inventoryRunes = serializablePlayer.inventoryRunes.map { getRuneByName(it) }.toMutableList()
-        player.gold = serializablePlayer.gold
-
     }
 }
 
@@ -371,7 +341,7 @@ data class SerializablePlayer(
     val EXPtoLv: Int,
     val AP_recovery: Int,
     val mainDeck: List<String>,
-    val temporaryDeck: List<String>,
+    val cardsOnHand: List<String>,
     val weapon: String,
     val runesActive: List<String>,
     val maxRunes: Int,
@@ -381,7 +351,7 @@ data class SerializablePlayer(
 )
 
 fun getCardByName(name: String): Card {
-    return cards[name] ?: Card(name, { 0 }, 0, "", 0, 0, "", "", 0, true)
+    return cards[name] ?: Card(name, { 0 }, 0, "", 0, 0, 0, "", "", 0, true)
 }
 
 fun getWeaponByName(name: String): Weapon {
@@ -391,5 +361,70 @@ fun getWeaponByName(name: String): Weapon {
 fun getRuneByName(name: String): Rune {
     return RunesList[name] ?: Rune(name, {}, {}, mutableStateOf(R.drawable.empty_slot), "",false)
 }
+
+@Serializable
+data class PlayerSerializable(
+    var name: String,
+    var lv: Int,
+    var STR: Int,
+    var VIT: Int,
+    var DEX: Int,
+    var INT: Int,
+    var healthDice: Int,
+    var skillPoint: Int,
+    var rase: String,
+    var profesions: List<String>,
+    var portrait: Int,
+    var maxHP: Int,
+    var currentHP: Int,
+    var maxAP: Int,
+    var currentAP: Int,
+    var exp: Int,
+    var expToLv: Int,
+    var apRecovery: Int,
+    var cardsSlots: Int,
+    var actionQueue: List<String>,
+    var modifierQueue: List<String>,
+    var mainDeck: List<String>,
+    var cardsOnHand: List<String>,
+    var weaponName: String,
+    var armorName: String,
+    var inventoryWeapons: List<String>,
+    var inventoryRunes: List<String>
+)
+
+fun toSerializable(player: Player): PlayerSerializable {
+    return PlayerSerializable(
+        name = player.name,
+        lv = player.lv,
+        STR = player.STR,
+        VIT = player.VIT,
+        DEX = player.DEX,
+        INT = player.INT,
+        healthDice = player.healthDice,
+        skillPoint = player.skillPoint,
+        rase = player.rase,
+        profesions = player.profesions.map { it.name }, // Nazwy profesji
+        portrait = player.portrait,
+        maxHP = player.MAX_HP.value,
+        currentHP = player.HP.value,
+        maxAP = player.MAX_AP.value,
+        currentAP = player.AP.value,
+        exp = player.EXP.value,
+        expToLv = player.EXPtoLv,
+        apRecovery = player.AP_recovery,
+        cardsSlots = player.cardsSlots,
+        actionQueue = player.actionQueue.map { it.name },
+        modifierQueue = player.modiferQueue.map { it.name },
+        mainDeck = player.mainDeck.map { it.name },
+        cardsOnHand = player.cardsOnHand.map { it.name },
+        weaponName = player.weapon.name,
+        armorName = player.armor.name,
+        inventoryWeapons = player.inventoryWeapons.map { it.name },
+        inventoryRunes = player.inventoryRunes.map { it.name }
+    )
+}
+
+
 
 val player = Player("Gracz",1,20,30,10,10)

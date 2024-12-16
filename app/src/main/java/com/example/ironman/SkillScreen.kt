@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -32,11 +34,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlin.math.sign
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SkillScreen(onDispose: () -> Unit) {
     val playerCards = remember { player.mainDeck }
+    //val cardsOnHand = remember { player.cardsOnHand }
+
     val horizontalScrollState = rememberScrollState()
     val verticalScrollState = rememberScrollState()
 
@@ -50,30 +55,71 @@ fun SkillScreen(onDispose: () -> Unit) {
             onDispose()
         }
     }
+        Row {
+            Box(
+                Modifier
+                    //.fillMaxWidth()
+                    .fillMaxSize()
+                    .background(Color(0xFFFFFACD)),
+            ) {
+                Column {
+                    FlowRow(
+                        modifier = Modifier
+                            .verticalScroll(verticalScrollState)
+                            .padding(3.dp),
 
-    Box(
-        Modifier
-            .fillMaxSize()
-            .background(Color(0xFFFFFACD)),
-    ) {
-        FlowRow(
-            modifier = Modifier
-                .verticalScroll(verticalScrollState)
-                .padding(8.dp),
+                        ) {
+                        for (index in playerCards.indices) {
+                            CardRecord(
+                                playerCards[index],
+                                index,
+                                onClick = { addToSlot(playerCards[index]) }
+                            )
+                        }
+                    }
 
-        ) {
-            for (index in playerCards.indices) {
-                CardRecord(
-                    playerCards[index],
-                    index
-                )
+                    Row {
+                        repeat(player.cardsSlots) { index ->
+                            Box(
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                CardSlot() //pierwsza warsta
+                                if (index < player.cardsOnHand.size) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                    ) {
+                                        CardSlotFull(player.cardsOnHand[index].sprite, onClick = { removeFromSlot() }) //druga warstwa
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
+}
+
+fun addToSlot(card: Card)
+{
+    val existingCard = player.cardsOnHand.find { it.name == card.name }
+    if (existingCard == null && player.cardsOnHand.size < player.cardsSlots)
+    {
+        player.cardsOnHand.add(card)
     }
 }
 
+
+fun removeFromSlot() {
+    if (player.cardsOnHand.isNotEmpty())
+    {
+        player.cardsOnHand.removeAt(player.cardsOnHand.lastIndex)
+    }
+
+}
+
 @Composable
-fun CardRecord(card: Card, index: Int) {
+fun CardRecord(card: Card, index: Int, onClick: () -> Unit) {
     var isGrayedOut = remember { mutableStateOf(card.isActive) }
     val cardSprite = card.spriteHold
     val cardDescription = card.descriptionSkill
@@ -82,8 +128,9 @@ fun CardRecord(card: Card, index: Int) {
         modifier = Modifier
             .height(230.dp)
             .width(100.dp)
-            .padding(3.dp)
-            .clickable { isGrayedOut.value = !isGrayedOut.value; player.mainDeck[index].isActive = !player.mainDeck[index].isActive }
+            .padding(1.dp)
+            //.clickable { isGrayedOut.value = !isGrayedOut.value; player.mainDeck[index].isActive = !player.mainDeck[index].isActive }
+            .clickable { onClick() }
     ) {
         Image(
             painter = painterResource(id = cardSprite),
@@ -102,3 +149,43 @@ fun CardRecord(card: Card, index: Int) {
         )
     }
 }
+
+@Composable
+fun CardSlot()
+{
+    Box(
+        modifier = Modifier
+            .height(80.dp)
+            .width(80.dp)
+            .padding(1.dp)
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.empty_slot),
+            contentDescription = "Image",
+            modifier = Modifier
+                .height(80.dp)
+                .width(80.dp)
+        )
+    }
+}
+
+@Composable
+fun CardSlotFull(sprite : Int, onClick: () -> Unit)
+{
+    Box(
+        modifier = Modifier
+            .height(80.dp)
+            .width(80.dp)
+            .padding(1.dp)
+            .clickable { onClick() }
+    ) {
+        Image(
+            painter = painterResource(id = sprite),
+            contentDescription = "Image",
+            modifier = Modifier
+                .height(80.dp)
+                .width(80.dp)
+        )
+    }
+}
+
