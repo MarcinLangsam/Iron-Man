@@ -59,7 +59,7 @@ fun getMapTileIcon(type: String): Int {
     else if (type.contains("#SE"))
         return R.drawable.map_icon_small_exit
     else if (type.contains("#ST"))
-        return R.drawable.map_icon_small_tresure
+        return R.drawable.map_icon_small_heal
     else if (type.contains("#SF"))
         return R.drawable.map_icon_small_fight
     else if (type.contains("#S"))
@@ -70,7 +70,7 @@ fun getMapTileIcon(type: String): Int {
     else if (type.contains("#BT"))
         return R.drawable.map_icon_big_tresure
     else if (type.contains("#BF"))
-        return R.drawable.map_icon_big_fight
+        return R.drawable.map_icon_big_buff
     else if (type.contains("#B"))
         return R.drawable.map_icon_big
 
@@ -91,6 +91,29 @@ fun getMapTileIcon(type: String): Int {
         return R.drawable.map_icon_long_horizontal_fight
     else if (type.contains("#LH"))
         return R.drawable.map_icon_long_horizontal
+
+    else if(type.contains("#LVH"))
+        return R.drawable.map_icon_long_vertical_heal
+    else if(type.contains("#LHH"))
+        return R.drawable.map_icon_long_horizontal_heal
+    else if(type.contains("#BH"))
+        return R.drawable.map_icon_big_heal
+    else if(type.contains("#SH"))
+        return R.drawable.map_icon_small_heal
+    else if(type.contains("#CH"))
+        return R.drawable.map_icon_corridor_heal
+
+    else if(type.contains("#LVB"))
+        return R.drawable.map_icon_long_vertical_buff
+    else if(type.contains("#LHB"))
+        return R.drawable.map_icon_long_horizontal_buff
+    else if(type.contains("#BB"))
+        return R.drawable.map_icon_big_buff
+    else if(type.contains("#SB"))
+        return R.drawable.map_icon_small_buff
+    else if(type.contains("#CB"))
+        return R.drawable.map_icon_corridor_heal //dac na buff !!!!!
+
 
     else
         return R.drawable.empty_slot
@@ -212,6 +235,9 @@ fun MainMapScreen(onFightScreen: () -> Unit, onLevelUpScreen: () -> Unit) {
                             R.drawable.map_icon_corridor_exit -> {
                                 CorridorHorizontal(mapTileIcon = tile, {  generatedMap.generateMap();revealFullMap() }, i, j)
                             }
+                        R.drawable.map_icon_corridor_heal -> {
+                            CorridorHorizontal(mapTileIcon = tile, {  generatedMap.generateMap();revealFullMap() }, i, j)
+                        }
 
                             R.drawable.map_icon_small  -> {
                                 SmallRoom(mapTileIcon = tile,{  },i,j)
@@ -228,6 +254,12 @@ fun MainMapScreen(onFightScreen: () -> Unit, onLevelUpScreen: () -> Unit) {
                             R.drawable.map_icon_small_exit  -> {
                                 SmallRoom(mapTileIcon = tile, { generatedMap.generateMap();revealFullMap() }, i, j)
                             }
+                        R.drawable.map_icon_small_buff  -> {
+                            SmallRoom(mapTileIcon = tile, { generatedMap.generateMap();revealFullMap() }, i, j)
+                        }
+                        R.drawable.map_icon_small_heal -> {
+                            SmallRoom(mapTileIcon = tile, { generatedMap.generateMap();revealFullMap() }, i, j)
+                        }
 
                             R.drawable.map_icon_big -> {
                                 BigRoom(mapTileIcon = tile,{  },i,j)
@@ -244,6 +276,12 @@ fun MainMapScreen(onFightScreen: () -> Unit, onLevelUpScreen: () -> Unit) {
                             R.drawable.map_icon_big_exit -> {
                                 BigRoom(mapTileIcon = tile, {  generatedMap.generateMap();revealFullMap() }, i, j)
                             }
+                        R.drawable.map_icon_big_buff -> {
+                            BigRoom(mapTileIcon = tile, {  generatedMap.generateMap();revealFullMap() }, i, j)
+                        }
+                        R.drawable.map_icon_big_heal -> {
+                            BigRoom(mapTileIcon = tile, {  generatedMap.generateMap();revealFullMap() }, i, j)
+                        }
 
                             R.drawable.map_icon_long_vertical -> {
                                 LongVerticalRoom(mapTileIcon = tile,{ },i,j)
@@ -260,6 +298,13 @@ fun MainMapScreen(onFightScreen: () -> Unit, onLevelUpScreen: () -> Unit) {
                             R.drawable.map_icon_long_vertical_exit -> {
                                 LongVerticalRoom(mapTileIcon = tile, { generatedMap.generateMap();revealFullMap() }, i, j)
                             }
+                            R.drawable.map_icon_long_vertical_heal -> {
+                                LongVerticalRoom(mapTileIcon = tile, { generatedMap.generateMap();revealFullMap() }, i, j)
+                            }
+                            R.drawable.map_icon_long_vertical_buff-> {
+                                LongVerticalRoom(mapTileIcon = tile, { generatedMap.generateMap();revealFullMap() }, i, j)
+                            }
+
 
                             R.drawable.map_icon_long_horizontal -> {
                                 LongHorizontalRoom(mapTileIcon = tile,{ },i,j)
@@ -277,6 +322,19 @@ fun MainMapScreen(onFightScreen: () -> Unit, onLevelUpScreen: () -> Unit) {
                                 LongHorizontalRoom(mapTileIcon = tile, { generatedMap.generateMap();revealFullMap() }, i, j)
 
                             }
+                            R.drawable.map_icon_long_horizontal_heal -> {
+                                LongHorizontalRoom(mapTileIcon = tile, { generatedMap.generateMap();revealFullMap() }, i, j)
+
+                            }
+                        R.drawable.map_icon_long_horizontal_buff -> {
+                            LongHorizontalRoom(mapTileIcon = tile, { generatedMap.generateMap();revealFullMap() }, i, j)
+
+                        }
+
+
+
+
+
                         }
                 }
             }
@@ -565,18 +623,4 @@ fun BigRoom(mapTileIcon: Int, onClickAction: () -> Unit, i: Int, j: Int)
 }
 
 
-
-fun saveGame(player: Player, context: Context) {
-    val serializablePlayer = player.toSerializablePlayer()
-    val jsonString = Json.encodeToString(serializablePlayer)
-    val file = File(context.filesDir, "savefile.txt")
-    file.writeText(jsonString)
-}
-
-fun loadGame(context: Context) {
-    val file = File(context.filesDir, "savefile.txt")
-    val jsonString = file.readText()
-    val serializablePlayer = Json.decodeFromString<SerializablePlayer>(jsonString)
-    player.loadPlayer(serializablePlayer)
-}
 

@@ -13,8 +13,8 @@ class Map(
 
     fun rollRoomContent(roomType: String) :String
     {
-        // F - fight, T - tresure, "" - empty room
-        val contentType = mutableListOf("F","F","F","T","T","","","","","","")
+        // F - fight, T - tresure, H - heal, B- buff "" - empty room
+        val contentType = mutableListOf("F","F","F","T","T","","","","","","","H","H","B","H","H","B","H","H","B")
         var roll = contentType.random()
         if(roomType == "C" && roll == "T") roll = ""
         return roll

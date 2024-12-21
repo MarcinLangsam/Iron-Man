@@ -31,7 +31,7 @@ class Player (
     var EXP = mutableStateOf(0)
     var EXPtoLv = 100 * lv
     var AP_recovery = 2
-    var cardsSlots = 2
+    var cardsSlots = 4
 
     var actionQueue = mutableStateListOf<Card>()
     var modiferQueue = mutableStateListOf<Modifier>()

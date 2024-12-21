@@ -94,6 +94,7 @@ fun SkillScreen(onDispose: () -> Unit) {
                                 }
                             }
                         }
+
                     }
                 }
             }
