@@ -15,8 +15,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -28,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import kotlin.random.Random
 
 @Composable
 fun CharacterCreationScreen(onMainMapScreen: () -> Unit, context: Context){
@@ -41,35 +45,83 @@ fun CharacterCreationScreen(onMainMapScreen: () -> Unit, context: Context){
     ) {}
 
     Column {
-        Row(
-            modifier = Modifier.fillMaxWidth().height(100.dp).padding(10.dp),
-            horizontalArrangement = Arrangement.Center
+        LazyRow(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(100.dp)
+                .padding(10.dp),
         ) {
-            Button(modifier = Modifier.width(150.dp).height(70.dp) ,onClick = { currentCategory = "Rase" }) {
-                Text("Rasa")
+            item {
+                Button(
+                    modifier = Modifier
+                        .width(150.dp)
+                        .height(70.dp),
+                    onClick = { currentCategory = "Rase" }
+                ) {
+                    Text("Rasa")
+                }
             }
-            Button(modifier = Modifier.width(150.dp).height(70.dp) ,onClick = { currentCategory = "Profesion" }) {
-                Text("Klasa")
+            item {
+                Button(
+                    modifier = Modifier
+                        .width(150.dp)
+                        .height(70.dp),
+                    onClick = { currentCategory = "Profesion" }
+                ) {
+                    Text("Klasa")
+                }
             }
-            Button(modifier = Modifier.width(150.dp).height(70.dp) ,onClick = { currentCategory = "Attributes" }) {
-                Text("Atrybuty")
+            item {
+                Button(
+                    modifier = Modifier
+                        .width(150.dp)
+                        .height(70.dp),
+                    onClick = { currentCategory = "Attributes" }
+                ) {
+                    Text("Atrybuty")
+                }
             }
-            Button(modifier = Modifier.width(150.dp).height(70.dp) ,onClick = { currentCategory = "Skills" }) {
-                Text("Umiejetnosci")
+            item {
+                Button(
+                    modifier = Modifier
+                        .width(150.dp)
+                        .height(70.dp),
+                    onClick = { currentCategory = "Skills" }
+                ) {
+                    Text("Umiejetnosci")
+                }
             }
-            Button(modifier = Modifier.width(150.dp).height(70.dp) ,onClick = { currentCategory = "Portret" }) {
-                Text("Portret")
+            item {
+                Button(
+                    modifier = Modifier
+                        .width(150.dp)
+                        .height(70.dp),
+                    onClick = { currentCategory = "Portrait" }
+                ) {
+                    Text("Portret")
+                }
             }
-
-            if(player.rase != "" && player.profesions.isNotEmpty())
-            {
-                Button(modifier = Modifier.width(150.dp).height(70.dp) ,onClick = { onMainMapScreen() }) {
+            item {
+                Button(
+                    modifier = Modifier
+                        .width(150.dp)
+                        .height(70.dp),
+                    onClick = { currentCategory = "Name" }
+                ) {
+                    Text("Imię")
+                }
+            }
+            item {
+                Button(
+                    modifier = Modifier
+                        .width(150.dp)
+                        .height(70.dp),
+                    onClick = { player.MAX_HP.value += (Random.nextInt(1, player.profesions.first().healthDice) + player.healthDiceBonus) ;player.updateStats() ;onMainMapScreen() }
+                ) {
                     Text("START")
                 }
             }
         }
-
-
 
         Column(modifier = Modifier
             .padding(10.dp)
@@ -80,14 +132,11 @@ fun CharacterCreationScreen(onMainMapScreen: () -> Unit, context: Context){
                 "Profesion" -> ProfesionComponent()
                 "Attributes" -> AttributeComponent()
                 "Skills" -> SkillsComponent()
-                "Portret" -> PortretComponent()
+                "Portrait" -> PortretComponent()
+                "Name" -> NameComponent()
             }
-
         }
     }
-
-
-
 }
 
 fun setPlayerRase(rase: String, rasebonus: () -> Unit){
@@ -166,7 +215,6 @@ fun ProfesionComponent(){
             Text("Wojownik", modifier = Modifier.padding(5.dp).clickable {
                 profesion = "Warrior";
                 profesionDescription = "Kostka zdrowia d10";
-                player.healthDice = 10;
                 setPlayerProfesion(profesionWarrior)
             }.background(
                 if (profesion.contains("Warrior")) Color.Gray else Color.Transparent)
@@ -174,7 +222,6 @@ fun ProfesionComponent(){
             Text("Łowca", modifier = Modifier.padding(5.dp).clickable {
                 profesion = "Hunter";
                 profesionDescription = "Kostka zdrowia d8";
-                player.healthDice = 8;
                 setPlayerProfesion(profesionHunter)
             }.background(
                 if (profesion.contains("Hunter")) Color.Gray else Color.Transparent)
@@ -182,7 +229,6 @@ fun ProfesionComponent(){
             Text("Mag", modifier = Modifier.padding(5.dp).clickable {
                 profesion = "Mage";
                 profesionDescription = "Kostka zdrowia d6";
-                player.healthDice = 6;
                 setPlayerProfesion(profesionMage)
             }.background(
                 if (profesion.contains("Mage")) Color.Gray else Color.Transparent)
@@ -366,5 +412,46 @@ fun getDrawableResourceForPortrait(portraitIndex: Int): Int {
         2 -> R.drawable.portrait2
         3 -> R.drawable.portrait3
         else -> R.drawable.portrait1
+    }
+}
+
+@Composable
+fun NameComponent() {
+    var inputName by remember { mutableStateOf("") }
+    val maxLength = 15
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text("Wpisz imię bohatera:", style = MaterialTheme.typography.bodyMedium)
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        TextField(
+            value = inputName,
+            onValueChange = {
+                if (it.length <= maxLength) {
+                    inputName = it
+                }
+            },
+            label = { Text("Imię bohatera") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = {
+                player.name = inputName
+            },
+            enabled = inputName.isNotBlank(),
+            modifier = Modifier.align(Alignment.End)
+        ) {
+            Text("Zatwierdź")
+        }
     }
 }

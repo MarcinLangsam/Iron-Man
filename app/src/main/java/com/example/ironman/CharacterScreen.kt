@@ -28,7 +28,7 @@ fun CharacterScreen(){
             player.VIT,
             player.DEX,
             player.INT,
-            player.weapon.name,
+            player.item.name,
             player.weaponDamage,
             player.maxRunes.value,
             player.gold

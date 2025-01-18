@@ -78,24 +78,32 @@ fun SkillScreen(onDispose: () -> Unit) {
                         }
                     }
 
-                    Row {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(5.dp)
+                    ) {
                         repeat(player.cardsSlots) { index ->
                             Box(
-                                modifier = Modifier.fillMaxSize()
+                                modifier = Modifier
+                                    .size(100.dp)
                             ) {
-                                CardSlot() //pierwsza warsta
+                                CardSlot()
+
                                 if (index < player.cardsOnHand.size) {
                                     Box(
                                         modifier = Modifier
                                             .fillMaxSize()
                                     ) {
-                                        CardSlotFull(player.cardsOnHand[index].sprite, onClick = { removeFromSlot() }) //druga warstwa
+                                        CardSlotFull(
+                                            player.cardsOnHand[index].sprite,
+                                            onClick = { removeFromSlot() }
+                                        )
                                     }
                                 }
                             }
                         }
-
                     }
+
                 }
             }
         }
@@ -130,7 +138,6 @@ fun CardRecord(card: Card, index: Int, onClick: () -> Unit) {
             .height(230.dp)
             .width(100.dp)
             .padding(1.dp)
-            //.clickable { isGrayedOut.value = !isGrayedOut.value; player.mainDeck[index].isActive = !player.mainDeck[index].isActive }
             .clickable { onClick() }
     ) {
         Image(

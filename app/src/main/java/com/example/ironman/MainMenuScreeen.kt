@@ -20,19 +20,7 @@ import androidx.compose.runtime.remember
 import java.io.File
 
 @Composable
-fun MainMenuScreen(onCharacterCreationScreen: () -> Unit, context: Context) {
-    /*val saveFileName = "savegame.txt"
-    val saveFile = File(context.filesDir, saveFileName)
-    val saveExists = remember { saveFile.exists() }
-
-    var playerName: String? = null
-    var playerLevel: Int? = null
-
-    if (saveExists) {
-        val saveData = saveFile.readLines()
-        playerName = saveData[0]
-        playerLevel = saveData[1].toInt()
-    }*/
+fun MainMenuScreen(onCharacterCreationScreen: () -> Unit, onMapScreen: () -> Unit , context: Context) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -64,6 +52,15 @@ fun MainMenuScreen(onCharacterCreationScreen: () -> Unit, context: Context) {
                     modifier = Modifier
                         .padding(vertical = 8.dp)
                         .clickable { onCharacterCreationScreen() }
+                )
+
+                Text(
+                    text = "Wczytaj grę",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .padding(vertical = 8.dp)
+                        .clickable { player = loadPlayerDataFromFile(context); player.updateStats(); onMapScreen() }
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))

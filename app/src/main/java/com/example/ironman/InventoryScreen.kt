@@ -22,7 +22,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.RichTooltip
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -49,7 +48,7 @@ var activeRunesIndex = mutableListOf<Int>()
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ItemSlotWeapon(
-    item: Weapon,
+    item: Item,
 ) {
     val tooltipState = rememberTooltipState(isPersistent = true)
     val scope = rememberCoroutineScope()
@@ -151,7 +150,7 @@ fun ItemSlotRune(
 }
 
 @Composable
-fun ListOfWeapons(items: MutableList<Weapon>){
+fun ListOfWeapons(items: MutableList<Item>){
     LazyVerticalGrid(
         columns = GridCells.Fixed(4)
     ) {
@@ -203,7 +202,7 @@ fun InventoryScreen() {
     val maxRunes = remember { player.maxRunes }
     var currentCategory by remember { mutableStateOf("Bronie") }
 
-    var currentWeapon by remember { player.weapon.sprite }
+    var currentWeapon by remember { player.item.sprite }
     var currentOff_hand by remember { player.off_hand.sprite }
     var currentArmor by remember { player.armor.sprite }
     var currentNecklace by remember { player.necklace.sprite }
@@ -213,7 +212,7 @@ fun InventoryScreen() {
     var currentPants by remember { player.pants.sprite }
 
     var runesSlots = remember { player.runesActive }
-    val invWeapon = remember { player.inventoryWeapons }
+    val invWeapon = remember { player.inventoryItems }
     var invRune = remember { player.inventoryRunes }
 
     val playerInfo by remember {
@@ -335,8 +334,8 @@ fun InventoryScreen() {
                     Box(modifier = Modifier
                         .size(40.dp)
                         .background(Color.Gray)) {
-                        LaunchedEffect(player.weapon.sprite) {
-                            currentWeapon = player.weapon.sprite.value
+                        LaunchedEffect(player.item.sprite) {
+                            currentWeapon = player.item.sprite.value
                         }
                         Image(
                             painter = painterResource(id = currentWeapon),

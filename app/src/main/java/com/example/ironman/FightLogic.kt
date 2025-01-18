@@ -52,7 +52,7 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-var activeCard = mutableListOf<Card>()
+var activeCard = mutableStateListOf<Card>()
 var maxModifier = 0
 var queuedModifierIndex = mutableListOf<Int>()
 var currentEnemy = szkielet
@@ -81,12 +81,12 @@ fun useCard(card: Card): Int {
     if(card.type == "attack")
     {
         currentEnemy.HP.value -= card.effect.invoke()
-        player.AP.value -= card.AP_required
+        //player.AP.value -= card.AP_required
     }
     if(card.type == "heal")
     {
         player.HP.value += card.effect.invoke()
-        player.AP.value -= card.AP_required
+        //player.AP.value -= card.AP_required
         checkForExceedingHPorAP(player)
     }
     if(card.type == "rest")
@@ -213,7 +213,6 @@ fun FightScreen(onMap: () -> Unit){
                 {
                     yOffsetPlayer.animateTo(targetYPlayer, animationSpec = tween(100))
                     //useCard(x)
-
                     damageText = useCard(x).toString()
                     damagePosition = 100.dp
                     damageColor = Color.Green
@@ -528,7 +527,7 @@ fun QueuedModifierButton(modifierQueue: MutableList<com.example.ironman.Modifier
                 if (modifierQueue.isNotEmpty()) {
                     popModifierFromCard()
                     visibleButtons[queuedModifierIndex.first()] = true
-                    queuedModifierIndex.removeFirst()
+                    queuedModifierIndex.removeAt(0)
                 }
             },
     ) {

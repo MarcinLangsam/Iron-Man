@@ -1,8 +1,6 @@
 package com.example.ironman
 
 import android.annotation.SuppressLint
-import android.content.Context
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -22,27 +20,20 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import java.io.File
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.json.Json
 
 var dungeonLevel = 1
 
@@ -119,17 +110,6 @@ fun getMapTileIcon(type: String): Int {
         return R.drawable.empty_slot
 }
 
-
-data class Room(
-    val type: String,
-    val width: Int,
-    val height: Int,
-    var x: Int = 0,
-    var y: Int = 0
-)
-
-
-
 @SuppressLint("SuspiciousIndentation")
 @Composable
 fun MainMapScreen(onFightScreen: () -> Unit, onLevelUpScreen: () -> Unit) {
@@ -142,23 +122,6 @@ fun MainMapScreen(onFightScreen: () -> Unit, onLevelUpScreen: () -> Unit) {
 
     val horizontalScrollState = rememberScrollState()
     val verticalScrollState = rememberScrollState()
-
-    /*val roomMap = List(generatedMap.rows) { row ->
-        List(generatedMap.columns) { column ->
-            val type = roomTypes[row][column]
-            val (width, height) = getRoomDimensions(type)
-            Room(type = type, width = width, height = height)
-        }
-    }
-
-    roomMap.forEachIndexed { rowIndex, row ->
-        row.forEachIndexed { columnIndex, room ->
-            val (x, y) = calculatePosition(rowIndex, columnIndex, roomMap)
-            room.x = x
-            room.y = y
-        }
-    }*/
-
 
     if (showDialog.value) {
         LootDialog(
@@ -181,14 +144,18 @@ fun MainMapScreen(onFightScreen: () -> Unit, onLevelUpScreen: () -> Unit) {
         horizontalArrangement = Arrangement.Start
     ){
         Column {
-            Image(
-                painter = painterResource(id = player.portrait),
-                contentDescription = "Portret gracza",
-                modifier = Modifier.size(50.dp)
-            )
+            Row {
+                Image(
+                    painter = painterResource(id = player.portrait),
+                    contentDescription = "Portret gracza",
+                    modifier = Modifier.size(50.dp)
+                )
+            }
+
             StatusBar(status = pHP, max = player.MAX_HP.value.toFloat(), barColor = Color.Red)
             StatusBar(status = pEXP, max = player.EXPtoLv.toFloat(), barColor = Color.Cyan)
         }
+
     }
     Column(
         modifier = Modifier
@@ -198,20 +165,18 @@ fun MainMapScreen(onFightScreen: () -> Unit, onLevelUpScreen: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Row {
-            /*Button(
-                onClick =
-                {
-                    if (player.levelUp()) { onLevelUpScreen() }
-                },
-                modifier = Modifier.size(width = 130.dp, height = 80.dp)
-            ) {
-                Text("LEVEL UP")
-            }*/
+            Button(onClick = { onLevelUpScreen.invoke() }) {
+                Text("NOWY POZIOM")
+            }
+            Button(onClick = { savePlayerDataToFile(player, context) }) {
+                Text("Zapisz grę")
+            }
+
             Button(
                 onClick =
                 {
                     generatedMap.generateMap()
-                    revealFullMap()
+                    //revealFullMap()
                 },
                 modifier = Modifier.size(width = 130.dp, height = 80.dp)
             ) {
@@ -233,10 +198,10 @@ fun MainMapScreen(onFightScreen: () -> Unit, onLevelUpScreen: () -> Unit) {
                                 CorridorHorizontal(mapTileIcon = tile, {  rollEnemy(); onFightScreen.invoke() }, i, j)
                             }
                             R.drawable.map_icon_corridor_exit -> {
-                                CorridorHorizontal(mapTileIcon = tile, {  generatedMap.generateMap();revealFullMap() }, i, j)
+                                CorridorHorizontal(mapTileIcon = tile, {  generatedMap.generateMap();revealRooms(i,j) }, i, j)
                             }
                         R.drawable.map_icon_corridor_heal -> {
-                            CorridorHorizontal(mapTileIcon = tile, {  generatedMap.generateMap();revealFullMap() }, i, j)
+                            CorridorHorizontal(mapTileIcon = tile, {  generatedMap.generateMap();revealRooms(i,j) }, i, j)
                         }
 
                             R.drawable.map_icon_small  -> {
@@ -252,13 +217,13 @@ fun MainMapScreen(onFightScreen: () -> Unit, onLevelUpScreen: () -> Unit) {
                                 SmallRoom(mapTileIcon = tile, {  rollEnemy(); onFightScreen.invoke() }, i, j)
                             }
                             R.drawable.map_icon_small_exit  -> {
-                                SmallRoom(mapTileIcon = tile, { generatedMap.generateMap();revealFullMap() }, i, j)
+                                SmallRoom(mapTileIcon = tile, { generatedMap.generateMap();revealRooms(i,j) }, i, j)
                             }
                         R.drawable.map_icon_small_buff  -> {
-                            SmallRoom(mapTileIcon = tile, { generatedMap.generateMap();revealFullMap() }, i, j)
+                            SmallRoom(mapTileIcon = tile, { generatedMap.generateMap();revealRooms(i,j) }, i, j)
                         }
                         R.drawable.map_icon_small_heal -> {
-                            SmallRoom(mapTileIcon = tile, { generatedMap.generateMap();revealFullMap() }, i, j)
+                            SmallRoom(mapTileIcon = tile, { generatedMap.generateMap();revealRooms(i,j) }, i, j)
                         }
 
                             R.drawable.map_icon_big -> {
@@ -274,13 +239,13 @@ fun MainMapScreen(onFightScreen: () -> Unit, onLevelUpScreen: () -> Unit) {
                                 BigRoom(mapTileIcon = tile, {  rollEnemy(); onFightScreen.invoke() }, i, j)
                             }
                             R.drawable.map_icon_big_exit -> {
-                                BigRoom(mapTileIcon = tile, {  generatedMap.generateMap();revealFullMap() }, i, j)
+                                BigRoom(mapTileIcon = tile, {  generatedMap.generateMap();revealRooms(i,j) }, i, j)
                             }
                         R.drawable.map_icon_big_buff -> {
-                            BigRoom(mapTileIcon = tile, {  generatedMap.generateMap();revealFullMap() }, i, j)
+                            BigRoom(mapTileIcon = tile, {  generatedMap.generateMap();revealRooms(i,j) }, i, j)
                         }
                         R.drawable.map_icon_big_heal -> {
-                            BigRoom(mapTileIcon = tile, {  generatedMap.generateMap();revealFullMap() }, i, j)
+                            BigRoom(mapTileIcon = tile, {  generatedMap.generateMap();revealRooms(i,j) }, i, j)
                         }
 
                             R.drawable.map_icon_long_vertical -> {
@@ -296,13 +261,13 @@ fun MainMapScreen(onFightScreen: () -> Unit, onLevelUpScreen: () -> Unit) {
                                 LongVerticalRoom(mapTileIcon = tile, {rollEnemy(); onFightScreen.invoke() }, i, j)
                             }
                             R.drawable.map_icon_long_vertical_exit -> {
-                                LongVerticalRoom(mapTileIcon = tile, { generatedMap.generateMap();revealFullMap() }, i, j)
+                                LongVerticalRoom(mapTileIcon = tile, { generatedMap.generateMap();revealRooms(i,j) }, i, j)
                             }
                             R.drawable.map_icon_long_vertical_heal -> {
-                                LongVerticalRoom(mapTileIcon = tile, { generatedMap.generateMap();revealFullMap() }, i, j)
+                                LongVerticalRoom(mapTileIcon = tile, { generatedMap.generateMap();revealRooms(i,j) }, i, j)
                             }
                             R.drawable.map_icon_long_vertical_buff-> {
-                                LongVerticalRoom(mapTileIcon = tile, { generatedMap.generateMap();revealFullMap() }, i, j)
+                                LongVerticalRoom(mapTileIcon = tile, { generatedMap.generateMap();revealRooms(i,j) }, i, j)
                             }
 
 
@@ -319,46 +284,24 @@ fun MainMapScreen(onFightScreen: () -> Unit, onLevelUpScreen: () -> Unit) {
                                 LongHorizontalRoom(mapTileIcon = tile, { rollEnemy(); onFightScreen.invoke() }, i, j)
                             }
                             R.drawable.map_icon_long_horizontal_exit -> {
-                                LongHorizontalRoom(mapTileIcon = tile, { generatedMap.generateMap();revealFullMap() }, i, j)
+                                LongHorizontalRoom(mapTileIcon = tile, { generatedMap.generateMap();revealRooms(i,j) }, i, j)
 
                             }
                             R.drawable.map_icon_long_horizontal_heal -> {
-                                LongHorizontalRoom(mapTileIcon = tile, { generatedMap.generateMap();revealFullMap() }, i, j)
+                                LongHorizontalRoom(mapTileIcon = tile, { generatedMap.generateMap();revealRooms(i,j) }, i, j)
 
                             }
                         R.drawable.map_icon_long_horizontal_buff -> {
-                            LongHorizontalRoom(mapTileIcon = tile, { generatedMap.generateMap();revealFullMap() }, i, j)
+                            LongHorizontalRoom(mapTileIcon = tile, { generatedMap.generateMap();revealRooms(i,j) }, i, j)
 
                         }
-
-
-
-
-
-                        }
+                    }
                 }
             }
         }
         Spacer(modifier = Modifier
             .fillMaxWidth()
             .height(90.dp))
-    }
-}
-
-fun revealRoom(i: Int, j: Int)
-{
-    if(generatedMap.map[i+1][j].value.isNotEmpty()) {
-        if (i + 1 < generatedMap.rows && generatedMap.map[i + 1][j].value.last() == 'K' && (generatedMap.map[i + 1][j].value.contains("B") || generatedMap.map[i + 1][j].value.contains("LV"))) generatedMap.map[i + 1][j].value += "A"
-    }
-    if(generatedMap.map[i-1][j].value.isNotEmpty()) {
-        if (i - 1 >= 0 && generatedMap.map[i - 1][j].value.last() == 'K' && (generatedMap.map[i - 1][j].value.contains("B") || generatedMap.map[i + 1][j].value.contains("LV"))) generatedMap.map[i - 1][j].value += "A"
-    }
-
-    if(generatedMap.map[i][j+1].value.isNotEmpty()) {
-        if (j + 1 < generatedMap.columns && generatedMap.map[i][j + 1].value.last() == 'K') generatedMap.map[i][j + 1].value += "A"
-    }
-    if(generatedMap.map[i][j-1].value.isNotEmpty()) {
-        if(j-1 >= 0 && generatedMap.map[i][j-1].value.last() == 'K') generatedMap.map[i][j-1].value += "A"
     }
 }
 
@@ -371,44 +314,37 @@ fun revealFullMap()
             }
 }
 
-fun getRoomDimensions(type: String): Pair<Int, Int> {
-    return when {
-        type.contains("C") -> Pair(65, 55)
-        type.contains("S") -> Pair(65, 65)
-        type.contains("LH") -> Pair(120, 65)
-        type.contains("LV") -> Pair(65, 110)
-        type.contains("B") -> Pair(110, 110)
-        else -> Pair(0, 0)
-    }
-}
+fun revealRooms(i: Int, j: Int) {
+    val rows = generatedMap.rows
+    val columns = generatedMap.columns
 
-fun calculatePosition(i: Int, j: Int): Pair<Int, Int> {
-    var x = 0
-    var y = 0
-
-    for (collumn in 0 until j)
-    {
-        val type = generatedMap.map[i][collumn].value
-        x += getRoomDimensions(type).first
+    if (j + 1 < columns && generatedMap.map[i][j + 1].value.isNotEmpty() &&
+        generatedMap.map[i][j + 1].value.last() == 'K'
+    ) {
+        generatedMap.map[i][j + 1].value =
+            generatedMap.map[i][j + 1].value.dropLast(1) + "A"
     }
 
-
-    for (row in 0 until i)
-    {
-        var max = 0
-        for (collumn in 0 until generatedMap.columns)
-        {
-            //val type = generatedMap.map[i][collumn].value
-            val type = getRoomDimensions(generatedMap.map[i][collumn].value).second
-            if(type>max)
-            {
-                max = type
-            }
-        }
-        y+=max
+    if (j - 1 >= 0 && generatedMap.map[i][j - 1].value.isNotEmpty() &&
+        generatedMap.map[i][j - 1].value.last() == 'K'
+    ) {
+        generatedMap.map[i][j - 1].value =
+            generatedMap.map[i][j - 1].value.dropLast(1) + "A"
     }
 
-    return Pair(x, y)
+    if (i + 1 < rows && generatedMap.map[i + 1][j].value.isNotEmpty() &&
+        generatedMap.map[i + 1][j].value.last() == 'K'
+    ) {
+        generatedMap.map[i + 1][j].value =
+            generatedMap.map[i + 1][j].value.dropLast(1) + "A"
+    }
+
+    if (i - 1 >= 0 && generatedMap.map[i - 1][j].value.isNotEmpty() &&
+        generatedMap.map[i - 1][j].value.last() == 'K'
+    ) {
+        generatedMap.map[i - 1][j].value =
+            generatedMap.map[i - 1][j].value.dropLast(1) + "A"
+    }
 }
 
 
@@ -447,15 +383,15 @@ fun CorridorHorizontal(mapTileIcon: Int, onClickAction: () -> Unit, i: Int, j: I
     val alpha = when (generatedMap.map[i][j].value.last()) {
         'U' -> 1f
         'A' -> 0.5f
-        'K' -> 0.0f
+        'K' -> 0.1f
         else -> 0.0f
     }
 
     val clickableModifier = when (generatedMap.map[i][j].value.last()) {
         'U','A' -> Modifier.clickable {
             onClickAction.invoke()
+            revealRooms(i,j)
             generatedMap.map[i][j].value = "#CU"
-            Log.d("",calculatePosition(i,j).toString())
         }
         else -> Modifier
     }
@@ -474,7 +410,6 @@ fun CorridorHorizontal(mapTileIcon: Int, onClickAction: () -> Unit, i: Int, j: I
             contentDescription = "Image",
             modifier = Modifier
                 .fillMaxSize()
-                //.clickable { onClickAction.invoke(); generatedMap.map[i][j].value = "#CU" }
         )
     }
 }
@@ -485,7 +420,7 @@ fun SmallRoom(mapTileIcon: Int, onClickAction: () -> Unit, i: Int, j: Int)
     val alpha = when (generatedMap.map[i][j].value.last()) {
         'U' -> 1f
         'A' -> 0.5f
-        'K' -> 0.0f
+        'K' -> 0.1f
         else -> 0.0f
     }
 
@@ -493,7 +428,7 @@ fun SmallRoom(mapTileIcon: Int, onClickAction: () -> Unit, i: Int, j: Int)
         'U','A' -> Modifier.clickable {
             onClickAction.invoke()
             generatedMap.map[i][j].value = "#SU"
-            Log.d("",calculatePosition(i,j).toString())
+            revealRooms(i,j)
         }
         else -> Modifier
     }
@@ -509,7 +444,6 @@ fun SmallRoom(mapTileIcon: Int, onClickAction: () -> Unit, i: Int, j: Int)
             contentDescription = "Image",
             modifier = Modifier
                 .fillMaxSize()
-                //.clickable { onClickAction.invoke(); generatedMap.map[i][j].value = "#SU" }
         )
     }
 }
@@ -520,15 +454,15 @@ fun LongHorizontalRoom(mapTileIcon: Int, onClickAction: () -> Unit, i: Int, j: I
     val alpha = when (generatedMap.map[i][j].value.last()) {
         'U' -> 1f
         'A' -> 0.5f
-        'K' -> 0.0f
+        'K' -> 0.1f
         else -> 0.0f
     }
 
     val clickableModifier = when (generatedMap.map[i][j].value.last()) {
         'U','A' -> Modifier.clickable {
             onClickAction.invoke()
+            revealRooms(i,j)
             generatedMap.map[i][j].value = "#LHU"
-            Log.d("",calculatePosition(i,j).toString())
         }
         else -> Modifier
     }
@@ -545,7 +479,6 @@ fun LongHorizontalRoom(mapTileIcon: Int, onClickAction: () -> Unit, i: Int, j: I
             contentDescription = "Image",
             modifier = Modifier
                 .fillMaxSize()
-                //.clickable { onClickAction.invoke(); generatedMap.map[i][j].value = "#LHU" }
         )
     }
 }
@@ -556,15 +489,15 @@ fun LongVerticalRoom(mapTileIcon: Int, onClickAction: () -> Unit, i: Int, j: Int
     val alpha = when (generatedMap.map[i][j].value.last()) {
         'U' -> 1f
         'A' -> 0.5f
-        'K' -> 0.0f
+        'K' -> 0.1f
         else -> 0.0f
     }
 
     val clickableModifier = when (generatedMap.map[i][j].value.last()) {
         'U','A' -> Modifier.clickable {
             onClickAction.invoke()
+            revealRooms(i,j)
             generatedMap.map[i][j].value = "#LVU"
-            Log.d("",calculatePosition(i,j).toString())
         }
         else -> Modifier
     }
@@ -581,7 +514,6 @@ fun LongVerticalRoom(mapTileIcon: Int, onClickAction: () -> Unit, i: Int, j: Int
             contentDescription = "Image",
             modifier = Modifier
                 .fillMaxSize()
-                //.clickable { onClickAction.invoke(); generatedMap.map[i][j].value = "#LVU" }
         )
     }
 }
@@ -593,15 +525,15 @@ fun BigRoom(mapTileIcon: Int, onClickAction: () -> Unit, i: Int, j: Int)
     val alpha = when (generatedMap.map[i][j].value.last()) {
         'U' -> 1f
         'A' -> 0.5f
-        'K' -> 0.0f
+        'K' -> 0.1f
         else -> 0.0f
     }
 
     val clickableModifier = when (generatedMap.map[i][j].value.last()) {
         'U','A' -> Modifier.clickable {
             onClickAction.invoke()
+            revealRooms(i,j)
             generatedMap.map[i][j].value = "#BU"
-            Log.d("",calculatePosition(i,j).toString())
         }
         else -> Modifier
     }
@@ -617,7 +549,6 @@ fun BigRoom(mapTileIcon: Int, onClickAction: () -> Unit, i: Int, j: Int)
             contentDescription = "Image",
             modifier = Modifier
                 .fillMaxSize()
-                //.clickable { onClickAction.invoke(); generatedMap.map[i][j].value = "#BU" }
         )
     }
 }

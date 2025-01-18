@@ -1,13 +1,11 @@
 package com.example.ironman
 
-import android.util.Log
+import android.content.Context
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.toMutableStateList
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import java.io.File
+import kotlin.math.floor
+import kotlin.random.Random
 
 class Player (
     var name: String,
@@ -16,79 +14,121 @@ class Player (
     var VIT: Int,
     var DEX: Int,
     var INT: Int,
-
 )
 {
-    var healthDice = 10
-    var skillPoint = 1
+    //traits
     var rase = ""
     var profesions = mutableListOf<Profesions>()
     var portrait = R.drawable.portrait1
-    var MAX_HP = mutableStateOf(VIT*10)
-    var HP = mutableStateOf(VIT*10)
-    var MAX_AP = mutableStateOf((DEX/5)+100)
-    var AP = mutableStateOf((DEX/5)+100)
     var EXP = mutableStateOf(0)
-    var EXPtoLv = 100 * lv
+    var EXPtoLv = 50 * lv
+    //stats
+    var MAX_HP = mutableStateOf(VIT*10)
+    var HPbonus = 0
+    var HP = mutableStateOf(VIT*10)
+    var MAX_AP = mutableStateOf((DEX/5))
+    var APbonus = 0
+    var AP = mutableStateOf((DEX/5))
     var AP_recovery = 2
-    var cardsSlots = 4
-
+    var cardsSlots = 2
+    var healthDiceBonus = 0
+    var weaponDamage = 0
+    var damage = weaponDamage+STR
+    //deck
     var actionQueue = mutableStateListOf<Card>()
     var modiferQueue = mutableStateListOf<Modifier>()
     var mainDeck = mutableStateListOf<Card>()
-    //var temporaryDeck = mutableListOf<Card>()
     var cardsOnHand = mutableStateListOf<Card>()
-
     var mainDeckModifiers = mutableListOf<Modifier>()
     var temporaryDeckModifiers = mutableListOf<Modifier>()
     var modifiersOnHand = mutableListOf<Modifier>()
-
-
-
-    var weapon = Weapon("Brak", {player.weaponDamage+=0},{player.weaponDamage-=0},0,mutableStateOf(R.drawable.empty_slot),"","empty")
-    var weaponSprite = weapon.sprite
-    var armor = Weapon("Brak", {player.weaponDamage+=0},{player.weaponDamage-=0},0,mutableStateOf(R.drawable.empty_slot),"","empty")
+    //inventory
+    var item = Item("Brak", {player.weaponDamage+=0},{player.weaponDamage-=0},0,mutableStateOf(R.drawable.empty_slot),"","empty")
+    var weaponSprite = item.sprite
+    var armor = Item("Brak", {player.weaponDamage+=0},{player.weaponDamage-=0},0,mutableStateOf(R.drawable.empty_slot),"","empty")
     var armorSprite = armor.sprite
-    var necklace = Weapon("Brak", {player.weaponDamage+=0},{player.weaponDamage-=0},0,mutableStateOf(R.drawable.empty_slot),"","empty")
+    var necklace = Item("Brak", {player.weaponDamage+=0},{player.weaponDamage-=0},0,mutableStateOf(R.drawable.empty_slot),"","empty")
     var necklaceSprite = necklace.sprite
-    var ring = Weapon("Brak", {player.weaponDamage+=0},{player.weaponDamage-=0},0,mutableStateOf(R.drawable.empty_slot),"","empty")
+    var ring = Item("Brak", {player.weaponDamage+=0},{player.weaponDamage-=0},0,mutableStateOf(R.drawable.empty_slot),"","empty")
     var ringSprite = ring.sprite
-    var off_hand = Weapon("Brak", {player.weaponDamage+=0},{player.weaponDamage-=0},0,mutableStateOf(R.drawable.empty_slot),"","empty")
+    var off_hand = Item("Brak", {player.weaponDamage+=0},{player.weaponDamage-=0},0,mutableStateOf(R.drawable.empty_slot),"","empty")
     var off_handSprite = off_hand.sprite
-    var helmet = Weapon("Brak", {player.weaponDamage+=0},{player.weaponDamage-=0},0,mutableStateOf(R.drawable.empty_slot),"","empty")
+    var helmet = Item("Brak", {player.weaponDamage+=0},{player.weaponDamage-=0},0,mutableStateOf(R.drawable.empty_slot),"","empty")
     var helmetSprite = helmet.sprite
-    var pants = Weapon("Brak", {player.weaponDamage+=0},{player.weaponDamage-=0},0,mutableStateOf(R.drawable.empty_slot),"","empty")
+    var pants = Item("Brak", {player.weaponDamage+=0},{player.weaponDamage-=0},0,mutableStateOf(R.drawable.empty_slot),"","empty")
     var pantsSprite = pants.sprite
-    var shoes = Weapon("Brak", {player.weaponDamage+=0},{player.weaponDamage-=0},0,mutableStateOf(R.drawable.empty_slot),"","empty")
+    var shoes = Item("Brak", {player.weaponDamage+=0},{player.weaponDamage-=0},0,mutableStateOf(R.drawable.empty_slot),"","empty")
     var shoesSprite = shoes.sprite
-
     var maxRunes = mutableStateOf(0)
-    var weaponDamage = 0
-    var damage = weaponDamage+STR
     var runesActive: MutableList<Rune> = MutableList(8){ Rune("Brak Runy", {},{}, mutableStateOf(R.drawable.empty_slot),"Brak Runy",false)}
-
-    var inventoryWeapons = mutableListOf<Weapon>()
+    var inventoryItems = mutableListOf<Item>()
     var inventoryRunes = mutableListOf<Rune>()
-
+    //other
     var gold = 0
+    var skillPoint = 1
 
-    fun levelUp(): Boolean {
-        if (player.EXP.value >= player.EXPtoLv)
+    fun checkForLvUp(): Boolean {
+        if (EXP.value >= EXPtoLv)
         {
             return true
         }
-
         return false
     }
 
-
     fun updateStats()
     {
-        MAX_HP.value = VIT*10
+        MAX_HP.value = VIT + HPbonus
         HP.value = MAX_HP.value
-        MAX_AP.value = DEX/5+100
+        MAX_AP.value = DEX/2 + APbonus
         AP.value = MAX_AP.value
         damage = weaponDamage+STR
+    }
+
+    fun levelUpPlayer(profession: Profesions){
+        handleProfesionSelection(profession)
+
+        MAX_HP.value += (Random.nextInt(1, profession.healthDice) + healthDiceBonus + floor((VIT/10).toDouble()).toInt())
+        HP.value = player.MAX_HP.value
+        AP.value = player.MAX_AP.value
+        updateStats()
+    }
+
+    fun handleProfesionSelection(profesion: Profesions) {
+        val existingProfesion = profesions.find { it.name == profesion.name }
+
+        if (existingProfesion != null) {
+            existingProfesion.profesionLv++
+
+            val newLevel = existingProfesion.profesionLv
+
+            existingProfesion.cards[newLevel]?.forEach { card ->
+                card?.name?.let { cardName ->
+                    cards[cardName]?.let { addCard(it) }
+                }
+            }
+
+            existingProfesion.modifier[newLevel]?.forEach { modifier ->
+                modifier?.name?.let { modifierName ->
+                    modifiers[modifierName]?.let { addModifier(it) }
+                }
+            }
+        } else {
+            profesions.add(profesion)
+
+            val newLevel = 1
+
+            profesion.cards[newLevel]?.forEach { card ->
+                card?.name?.let { cardName ->
+                    cards[cardName]?.let { addCard(it) }
+                }
+            }
+
+            profesion.modifier[newLevel]?.forEach { modifier ->
+                modifier?.name?.let { modifierName ->
+                    modifiers[modifierName]?.let { addModifier(it) }
+                }
+            }
+        }
     }
 
     fun addCard(card: Card) {
@@ -97,7 +137,6 @@ class Player (
             existingCard.number += 1
         } else {
             mainDeck.add(card)
-            //temporaryDeck.add(card)
         }
     }
     fun removeCard(card: Card) {
@@ -143,119 +182,119 @@ class Player (
     }
 
     //handle equipment
-    fun equipWeapon(equipWeapon: Weapon)
+    fun equipWeapon(equipItem: Item)
     {
-        if (equipWeapon.type == "weapon")
+        if (equipItem.type == "weapon")
         {
             //old weapon
             deequipAllRune()
-            weapon.deequipEffect.invoke(player)
+            item.deequipEffect.invoke(player)
             //new weapon
-            weapon.sprite = equipWeapon.sprite
-            weapon.name = equipWeapon.name
-            weapon.equipEffect = equipWeapon.equipEffect
-            weapon.deequipEffect = equipWeapon.deequipEffect
-            weapon.description = equipWeapon.description
-            weapon.runeSlot = equipWeapon.runeSlot
-            weapon.equipEffect.invoke(player)
-            weaponSprite = weapon.sprite
-            maxRunes.value = weapon.runeSlot
+            item.sprite = equipItem.sprite
+            item.name = equipItem.name
+            item.equipEffect = equipItem.equipEffect
+            item.deequipEffect = equipItem.deequipEffect
+            item.description = equipItem.description
+            item.runeSlot = equipItem.runeSlot
+            item.equipEffect.invoke(player)
+            weaponSprite = item.sprite
+            maxRunes.value = item.runeSlot
         }
-        else if (equipWeapon.type == "off_hand")
+        else if (equipItem.type == "off_hand")
         {
             //old off_hand
             off_hand.deequipEffect.invoke(player)
             //new off_hand
-            off_hand.sprite = equipWeapon.sprite
-            off_hand.name = equipWeapon.name
-            off_hand.equipEffect = equipWeapon.equipEffect
-            off_hand.deequipEffect = equipWeapon.deequipEffect
-            off_hand.description = equipWeapon.description
-            off_hand.runeSlot = equipWeapon.runeSlot
+            off_hand.sprite = equipItem.sprite
+            off_hand.name = equipItem.name
+            off_hand.equipEffect = equipItem.equipEffect
+            off_hand.deequipEffect = equipItem.deequipEffect
+            off_hand.description = equipItem.description
+            off_hand.runeSlot = equipItem.runeSlot
             off_hand.equipEffect.invoke(player)
             off_handSprite = off_hand.sprite
         }
-        else if (equipWeapon.type == "armor")
+        else if (equipItem.type == "armor")
         {
             //old armor
             armor.deequipEffect.invoke(player)
             //new armor
-            armor.sprite = equipWeapon.sprite
-            armor.name = equipWeapon.name
-            armor.equipEffect = equipWeapon.equipEffect
-            armor.deequipEffect = equipWeapon.deequipEffect
-            armor.description = equipWeapon.description
-            armor.runeSlot = equipWeapon.runeSlot
+            armor.sprite = equipItem.sprite
+            armor.name = equipItem.name
+            armor.equipEffect = equipItem.equipEffect
+            armor.deequipEffect = equipItem.deequipEffect
+            armor.description = equipItem.description
+            armor.runeSlot = equipItem.runeSlot
             armor.equipEffect.invoke(player)
             armorSprite = armor.sprite
         }
-        else if (equipWeapon.type == "necklace")
+        else if (equipItem.type == "necklace")
         {
             //old necklace
             necklace.deequipEffect.invoke(player)
             //new necklace
-            necklace.sprite = equipWeapon.sprite
-            necklace.name = equipWeapon.name
-            necklace.equipEffect = equipWeapon.equipEffect
-            necklace.deequipEffect = equipWeapon.deequipEffect
-            necklace.description = equipWeapon.description
-            necklace.runeSlot = equipWeapon.runeSlot
+            necklace.sprite = equipItem.sprite
+            necklace.name = equipItem.name
+            necklace.equipEffect = equipItem.equipEffect
+            necklace.deequipEffect = equipItem.deequipEffect
+            necklace.description = equipItem.description
+            necklace.runeSlot = equipItem.runeSlot
             necklace.equipEffect.invoke(player)
             necklaceSprite = necklace.sprite
         }
-        else if (equipWeapon.type == "ring")
+        else if (equipItem.type == "ring")
         {
             //old ring
             ring.deequipEffect.invoke(player)
             //new ring
-            ring.sprite = equipWeapon.sprite
-            ring.name = equipWeapon.name
-            ring.equipEffect = equipWeapon.equipEffect
-            ring.deequipEffect = equipWeapon.deequipEffect
-            ring.description = equipWeapon.description
-            ring.runeSlot = equipWeapon.runeSlot
+            ring.sprite = equipItem.sprite
+            ring.name = equipItem.name
+            ring.equipEffect = equipItem.equipEffect
+            ring.deequipEffect = equipItem.deequipEffect
+            ring.description = equipItem.description
+            ring.runeSlot = equipItem.runeSlot
             ring.equipEffect.invoke(player)
             ringSprite = ring.sprite
         }
-        else if (equipWeapon.type == "helmet")
+        else if (equipItem.type == "helmet")
         {
             //old helmet
             helmet.deequipEffect.invoke(player)
             //new helmet
-            helmet.sprite = equipWeapon.sprite
-            helmet.name = equipWeapon.name
-            helmet.equipEffect = equipWeapon.equipEffect
-            helmet.deequipEffect = equipWeapon.deequipEffect
-            helmet.description = equipWeapon.description
-            helmet.runeSlot = equipWeapon.runeSlot
+            helmet.sprite = equipItem.sprite
+            helmet.name = equipItem.name
+            helmet.equipEffect = equipItem.equipEffect
+            helmet.deequipEffect = equipItem.deequipEffect
+            helmet.description = equipItem.description
+            helmet.runeSlot = equipItem.runeSlot
             helmet.equipEffect.invoke(player)
             helmetSprite = helmet.sprite
         }
-        else if (equipWeapon.type == "shoes")
+        else if (equipItem.type == "shoes")
         {
             //old shoes
             shoes.deequipEffect.invoke(player)
             //new shoes
-            shoes.sprite = equipWeapon.sprite
-            shoes.name = equipWeapon.name
-            shoes.equipEffect = equipWeapon.equipEffect
-            shoes.deequipEffect = equipWeapon.deequipEffect
-            shoes.description = equipWeapon.description
-            shoes.runeSlot = equipWeapon.runeSlot
+            shoes.sprite = equipItem.sprite
+            shoes.name = equipItem.name
+            shoes.equipEffect = equipItem.equipEffect
+            shoes.deequipEffect = equipItem.deequipEffect
+            shoes.description = equipItem.description
+            shoes.runeSlot = equipItem.runeSlot
             shoes.equipEffect.invoke(player)
             shoesSprite = shoes.sprite
         }
-        else if (equipWeapon.type == "pants")
+        else if (equipItem.type == "pants")
         {
             //old pants
             pants.deequipEffect.invoke(player)
             //new pants
-            pants.sprite = equipWeapon.sprite
-            pants.name = equipWeapon.name
-            pants.equipEffect = equipWeapon.equipEffect
-            pants.deequipEffect = equipWeapon.deequipEffect
-            pants.description = equipWeapon.description
-            pants.runeSlot = equipWeapon.runeSlot
+            pants.sprite = equipItem.sprite
+            pants.name = equipItem.name
+            pants.equipEffect = equipItem.equipEffect
+            pants.deequipEffect = equipItem.deequipEffect
+            pants.description = equipItem.description
+            pants.runeSlot = equipItem.runeSlot
             pants.equipEffect.invoke(player)
             pantsSprite = pants.sprite
         }
@@ -292,7 +331,7 @@ class Player (
                 runesActive[i].deequipEffect = {}
                 runesActive[i].description = "Brak Runy"
                 inventoryRunes[activeRunesIndex.last()].isActive = !inventoryRunes[activeRunesIndex.last()].isActive
-                activeRunesIndex.removeLast()
+                activeRunesIndex.removeAt(activeRunesIndex.lastIndex)
                 break
             }
         }
@@ -325,106 +364,163 @@ class Player (
     }
 }
 
-@Serializable
-data class SerializablePlayer(
-    val name: String,
-    val lv: Int,
-    val STR: Int,
-    val VIT: Int,
-    val DEX: Int,
-    val INT: Int,
-    val MAX_HP: Int,
-    val HP: Int,
-    val MAX_AP: Int,
-    val AP: Int,
-    val EXP: Int,
-    val EXPtoLv: Int,
-    val AP_recovery: Int,
-    val mainDeck: List<String>,
-    val cardsOnHand: List<String>,
-    val weapon: String,
-    val runesActive: List<String>,
-    val maxRunes: Int,
-    val inventoryWeapons: List<String>,
-    val inventoryRunes: List<String>,
-    val gold: Int
-)
-
-fun getCardByName(name: String): Card {
-    return cards[name] ?: Card(name, { 0 }, 0, "", 0, 0, 0, "", "", 0, true)
+fun savePlayerDataToFile(player: Player, context: Context) {
+    val fileName = "save.txt"
+    val fileContent = buildString {
+        appendLine("name=${player.name}")
+        appendLine("lv=${player.lv}")
+        appendLine("STR=${player.STR}")
+        appendLine("VIT=${player.VIT}")
+        appendLine("DEX=${player.DEX}")
+        appendLine("INT=${player.INT}")
+        appendLine("EXP=${player.EXP.value}")
+        appendLine("EXPtoLv=${player.EXPtoLv}")
+        appendLine("AP_recovery=${player.AP_recovery}")
+        appendLine("cardsSlots=${player.cardsSlots}")
+        appendLine("healthDiceBonus=${player.healthDiceBonus}")
+        appendLine("rase=${player.rase}")
+        appendLine("portrait=${player.portrait}")
+        appendLine("gold=${player.gold}")
+        appendLine("maxRunes=${player.maxRunes.value}")
+        appendLine("runesActive=${player.runesActive.joinToString(";") { it.name }}")
+        appendLine("inventoryWeapons=${player.inventoryItems.joinToString(";") { it.name }}")
+        appendLine("inventoryRunes=${player.inventoryRunes.joinToString(";") { it.name }}")
+        appendLine("profesions=${player.profesions.joinToString(";") { "${it.name} (${it.profesionLv})" }}")
+        appendLine("actionQueue=${player.actionQueue.joinToString(";") { it.name }}")
+        appendLine("modifierQueue=${player.modiferQueue.joinToString(";") { it.name }}")
+        appendLine("mainDeck=${player.mainDeck.joinToString(";") { it.name }}")
+        appendLine("cardsOnHand=${player.cardsOnHand.joinToString(";") { it.name }}")
+        appendLine("mainDeckModifiers=${player.mainDeckModifiers.joinToString(";") { it.name }}")
+        appendLine("temporaryDeckModifiers=${player.temporaryDeckModifiers.joinToString(";") { it.name }}")
+        appendLine("modifiersOnHand=${player.modifiersOnHand.joinToString(";") { it.name }}")
+        appendLine("weapon=${player.item.name}")
+        appendLine("armor=${player.armor.name}")
+        appendLine("necklace=${player.necklace.name}")
+        appendLine("ring=${player.ring.name}")
+        appendLine("off_hand=${player.off_hand.name}")
+        appendLine("helmet=${player.helmet.name}")
+        appendLine("pants=${player.pants.name}")
+        appendLine("shoes=${player.shoes.name}")
+    }
+    context.openFileOutput(fileName, Context.MODE_PRIVATE).use {
+        it.write(fileContent.toByteArray())
+    }
 }
 
-fun getWeaponByName(name: String): Weapon {
-    return WeaponsList[name] ?: Weapon(name, { _: Player -> }, { _: Player -> }, 0, mutableStateOf(R.drawable.empty_slot), "","empty")
-}
 
-fun getRuneByName(name: String): Rune {
-    return RunesList[name] ?: Rune(name, {}, {}, mutableStateOf(R.drawable.empty_slot), "",false)
-}
+fun loadPlayerDataFromFile(context: Context, fileName: String = "save.txt"): Player {
+    val file = File(context.filesDir, fileName)
+    val lines = file.readLines()
 
-@Serializable
-data class PlayerSerializable(
-    var name: String,
-    var lv: Int,
-    var STR: Int,
-    var VIT: Int,
-    var DEX: Int,
-    var INT: Int,
-    var healthDice: Int,
-    var skillPoint: Int,
-    var rase: String,
-    var profesions: List<String>,
-    var portrait: Int,
-    var maxHP: Int,
-    var currentHP: Int,
-    var maxAP: Int,
-    var currentAP: Int,
-    var exp: Int,
-    var expToLv: Int,
-    var apRecovery: Int,
-    var cardsSlots: Int,
-    var actionQueue: List<String>,
-    var modifierQueue: List<String>,
-    var mainDeck: List<String>,
-    var cardsOnHand: List<String>,
-    var weaponName: String,
-    var armorName: String,
-    var inventoryWeapons: List<String>,
-    var inventoryRunes: List<String>
-)
+    val map = lines.associate {
+        val (key, value) = it.split(" = ", limit = 2)
+        key to value.replace("\"", "").trim()
+    }
 
-fun toSerializable(player: Player): PlayerSerializable {
-    return PlayerSerializable(
-        name = player.name,
-        lv = player.lv,
-        STR = player.STR,
-        VIT = player.VIT,
-        DEX = player.DEX,
-        INT = player.INT,
-        healthDice = player.healthDice,
-        skillPoint = player.skillPoint,
-        rase = player.rase,
-        profesions = player.profesions.map { it.name }, // Nazwy profesji
-        portrait = player.portrait,
-        maxHP = player.MAX_HP.value,
-        currentHP = player.HP.value,
-        maxAP = player.MAX_AP.value,
-        currentAP = player.AP.value,
-        exp = player.EXP.value,
-        expToLv = player.EXPtoLv,
-        apRecovery = player.AP_recovery,
-        cardsSlots = player.cardsSlots,
-        actionQueue = player.actionQueue.map { it.name },
-        modifierQueue = player.modiferQueue.map { it.name },
-        mainDeck = player.mainDeck.map { it.name },
-        cardsOnHand = player.cardsOnHand.map { it.name },
-        weaponName = player.weapon.name,
-        armorName = player.armor.name,
-        inventoryWeapons = player.inventoryWeapons.map { it.name },
-        inventoryRunes = player.inventoryRunes.map { it.name }
+    val profesionsList = lines.filter { it.startsWith("Profesions") }.map {
+        val (_, data) = it.split(" = ")
+        val (name, profesionLv) = data.split(": ").map { part -> part.trim() }
+        Profesions(
+            name = name,
+            profesionLv = profesionLv.toInt(),
+            cards = mutableMapOf(),
+            perks = mutableMapOf(),
+            healthDice = 0,
+            modifier = mutableMapOf()
+        )
+    }.toMutableList()
+
+    val runesActiveList = map["runesActive"]
+        ?.split(";")
+        ?.mapNotNull { findRuneByName(it) }
+        ?.toMutableList()
+        ?: MutableList(8) { Rune("Brak Runy", {}, {}, mutableStateOf(R.drawable.empty_slot), "Brak Runy", false) }
+
+    val inventoryWeaponsList = map["inventoryWeapons"]
+        ?.split(";")
+        ?.map { findWeaponByName(it) }
+        ?.toMutableList()
+        ?: mutableListOf()
+
+    val inventoryRunesList = map["inventoryRunes"]
+        ?.split(";")
+        ?.mapNotNull { findRuneByName(it) }
+        ?.toMutableList()
+        ?: mutableListOf()
+
+    fun parseCardList(key: String): MutableList<Card> {
+        return map[key]?.split(", ")?.mapNotNull { cardName ->
+            findCardByName(cardName)
+        }?.toMutableList() ?: mutableListOf()
+    }
+
+    fun parseModifierList(key: String): MutableList<Modifier> {
+        return map[key]?.split(", ")?.mapNotNull { modifierName ->
+            findModifierByName(modifierName)
+        }?.toMutableList() ?: mutableListOf()
+    }
+
+    fun parseRuneList(runesString: String?): List<Rune> {
+        return runesString?.split(";")?.mapNotNull { findRuneByName(it) } ?: emptyList()
+    }
+
+    val player = Player(
+        name = map["name"] ?: "Unknown",
+        lv = map["lv"]?.toInt() ?: 1,
+        STR = map["STR"]?.toInt() ?: 0,
+        VIT = map["VIT"]?.toInt() ?: 0,
+        DEX = map["DEX"]?.toInt() ?: 0,
+        INT = map["INT"]?.toInt() ?: 0
     )
+
+    player.rase = map["rase"] ?: "Human"
+    player.portrait = map["portrait"]?.toInt() ?: R.drawable.portrait1
+    player.profesions.addAll(profesionsList)
+
+    player.EXP.value = map["EXP"]?.toInt() ?: 0
+    player.EXPtoLv = map["EXPtoLv"]?.toInt() ?: 100
+    player.AP_recovery = map["AP_recovery"]?.toInt() ?: 2
+    player.cardsSlots = map["cardsSlots"]?.toInt() ?: 2
+    player.healthDiceBonus = map["healthDiceBonus"]?.toInt() ?: 0
+
+    player.mainDeck.addAll(parseCardList("mainDeck"))
+    player.mainDeckModifiers.addAll(parseModifierList("mainDeckModifiers"))
+    player.temporaryDeckModifiers.addAll(parseModifierList("temporaryDeckModifiers"))
+
+    player.item = findWeaponByName(map["weapon"] ?: "Brak")
+    player.armor = findWeaponByName(map["armor"] ?: "Brak")
+    player.necklace = findWeaponByName(map["necklace"] ?: "Brak")
+    player.ring = findWeaponByName(map["ring"] ?: "Brak")
+    player.off_hand = findWeaponByName(map["off_hand"] ?: "Brak")
+    player.helmet = findWeaponByName(map["helmet"] ?: "Brak")
+    player.pants = findWeaponByName(map["pants"] ?: "Brak")
+    player.shoes = findWeaponByName(map["shoes"] ?: "Brak")
+
+    player.maxRunes.value = map["maxRunes"]?.toInt() ?: 0
+    player.runesActive = runesActiveList
+    player.inventoryItems = inventoryWeaponsList
+    player.inventoryRunes = inventoryRunesList
+
+    player.gold = map["gold"]?.toInt() ?: 0
+
+    return player
+}
+
+fun findRuneByName(name: String): Rune? {
+    return RunesList[name]
+}
+
+fun findCardByName(name: String): Card? {
+    return cards[name]
+}
+
+fun findModifierByName(name: String): Modifier? {
+    return modifiers[name]
+}
+
+fun findWeaponByName(name: String): Item {
+    return ItemsList[name]!!
 }
 
 
-
-val player = Player("Gracz",1,20,30,10,10)
+var player = Player("Gracz",1,1,1,1,1)

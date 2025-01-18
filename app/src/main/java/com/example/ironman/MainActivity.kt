@@ -1,7 +1,6 @@
 package com.example.ironman
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,40 +20,22 @@ class MainActivity : ComponentActivity() {
                 ) {
                     Navigation()
 
-                    cards["Zamach"]?.let { player.addCard(it) }
-                    cards["Rozpłatanie"]?.let { player.addCard(it) }
-                    cards["Leczenie"]?.let { player.addCard(it) }
-                    cards["Odsapka"]?.let { player.addCard(it) }
-                    cards["Nakładanie Rąk"]?.let { player.addCard(it) }
-                    cards["Grzmot"]?.let { player.addCard(it) }
 
-                    modifiers["Wzmocnienie"]?.let { player.addModifier(it) }
-
-                    //player.updateDeck()
-                    //player.rollFullHand()
-
-                    player.updateDeckModfiers()
-                    player.rollFullHandModifiers()
-                    Log.d("", "HALO TUTAJ")
-                    Log.d("", player.cardsOnHand.size.toString())
-                    Log.d("", player.modifiersOnHand.size.toString())
-
-
-                    WeaponsList["Siewca Smierci"]?.let { player.inventoryWeapons.add(it) }
-                    WeaponsList["Grzech Kaplana"]?.let { player.inventoryWeapons.add(it) }
-                    WeaponsList["Topor wojownika"]?.let { player.inventoryWeapons.add(it) }
-                    WeaponsList["Skorzany Pancerz"]?.let { player.inventoryWeapons.add(it) }
-                    WeaponsList["Srebrny Pierscien"]?.let { player.inventoryWeapons.add(it) }
-                    WeaponsList["Amulet Precyzji"]?.let { player.inventoryWeapons.add(it) }
-                    WeaponsList["Drewniana Tarcza"]?.let { player.inventoryWeapons.add(it) }
-                    WeaponsList["Helm"]?.let { player.inventoryWeapons.add(it) }
-                    WeaponsList["Buty"]?.let { player.inventoryWeapons.add(it) }
+                    /*ItemsList["Siewca Smierci"]?.let { player.inventoryItems.add(it) }
+                    ItemsList["Grzech Kaplana"]?.let { player.inventoryItems.add(it) }
+                    ItemsList["Topor wojownika"]?.let { player.inventoryItems.add(it) }
+                    ItemsList["Skorzany Pancerz"]?.let { player.inventoryItems.add(it) }
+                    ItemsList["Srebrny Pierscien"]?.let { player.inventoryItems.add(it) }
+                    ItemsList["Amulet Precyzji"]?.let { player.inventoryItems.add(it) }
+                    ItemsList["Drewniana Tarcza"]?.let { player.inventoryItems.add(it) }
+                    ItemsList["Helm"]?.let { player.inventoryItems.add(it) }
+                    ItemsList["Buty"]?.let { player.inventoryItems.add(it) }
 
                     RunesList["Runa sily"]?.let { player.inventoryRunes.add(it) }
                     RunesList["Runa inteligencji"]?.let { player.inventoryRunes.add(it) }
                     RunesList["Runa zrecznosci"]?.let { player.inventoryRunes.add(it) }
                     RunesList["Runa many"]?.let { player.inventoryRunes.add(it) }
-                    RunesList["Runa akcji"]?.let { player.inventoryRunes.add(it) }
+                    RunesList["Runa akcji"]?.let { player.inventoryRunes.add(it) }*/
 
                     //generatedMap.generateMap()
                     //revealFullMap()

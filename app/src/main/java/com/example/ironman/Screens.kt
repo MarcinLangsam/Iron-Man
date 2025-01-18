@@ -117,6 +117,12 @@ fun Navigation() {
         }
     }
 
+    when (navBackStackEntry?.destination?.route) {
+        "LevelUpScreen" -> {
+            bottomBarState.value = false
+        }
+    }
+
 
     Scaffold(
         bottomBar = { BottomMenu(navController = navController, bottomBarState = bottomBarState)},
@@ -135,7 +141,12 @@ fun BottomNavGraph(navController: NavHostController){
     ) {
         composable(route = Screens.MainMapScreen.route){ MainMapScreen({ navController.navigate(Screens.FightScreen.route) },
             { navController.navigate(Screens.FightScreen.route) }) }
-        composable(route = Screens.MainMenuScreen.route){ MainMenuScreen(onCharacterCreationScreen = { navController.navigate(Screens.CharacterCreationScreen.route) }, context = LocalContext.current) }
+        composable(route = Screens.MainMenuScreen.route){
+            MainMenuScreen(onCharacterCreationScreen = { navController.navigate(Screens.CharacterCreationScreen.route) },
+                context = LocalContext.current,
+                onMapScreen = { navController.navigate(Screens.MainMapScreen.route) }
+            )
+        }
         composable(route = Screens.CharacterCreationScreen.route){ CharacterCreationScreen(onMainMapScreen = { navController.navigate(Screens.MainMapScreen.route) }, context = LocalContext.current) }
         composable(route = Screens.CharacterScreen.route){ CharacterScreen() }
         composable(route = Screens.InventoryScreen.route){ InventoryScreen() }
@@ -172,7 +183,9 @@ fun BottomMenu(navController: NavHostController, bottomBarState: MutableState<Bo
         contentAlignment = Alignment.BottomStart)
     {
         AnimatedVisibility(
-            modifier = Modifier.width(370.dp).height(50.dp),
+            modifier = Modifier
+                .width(370.dp)
+                .height(50.dp),
             visible = bottomBarState.value,
             enter = slideInVertically(initialOffsetY = { it }),
             exit = slideOutVertically(targetOffsetY = { it }),
