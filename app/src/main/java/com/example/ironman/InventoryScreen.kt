@@ -1,5 +1,6 @@
 package com.example.ironman
 
+import android.widget.Space
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -182,7 +183,7 @@ fun ListOfRunes(items: MutableList<Rune>){
 fun ListOfStats(stat: List<Any>)
 {
     LazyColumn(
-        modifier = Modifier.padding(16.dp)
+        modifier = Modifier.padding(16.dp).padding(bottom = 50.dp)
     ) {
         itemsIndexed(stat) { _, info ->
             Text(
@@ -191,10 +192,12 @@ fun ListOfStats(stat: List<Any>)
                     .padding(2.dp),
                 text = info.toString(),
                 fontSize = 16.sp,
-                color = Color.Black
+                color = Color.White
             )
         }
     }
+
+    Spacer(modifier = Modifier.height(20.dp))
 }
 
 @Composable
@@ -243,7 +246,7 @@ fun InventoryScreen() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFFFACD))
+            .background(Color(0xFF333333))
     )
 
     Column(
@@ -432,21 +435,6 @@ fun InventoryScreen() {
                 }
             }
         }
-    }
-}
-
-private fun getOffsetForSquareBetweenPluses_x(index: Int): Dp {
-    val offset = -20.dp
-    return when (index) {
-        0 -> 25.dp
-        1 -> offset+30.dp
-        2 -> offset+50.dp
-        3 -> offset+30.dp
-        4 -> 25.dp
-        5 -> (-40).dp
-        6 -> -offset-5.dp
-        7 -> (-45).dp
-        else -> 0.dp
     }
 }
 

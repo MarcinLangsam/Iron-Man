@@ -5,6 +5,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,7 +34,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -48,7 +52,6 @@ import androidx.navigation.compose.rememberNavController
 sealed class Screens(val route: String) {
     object MainMenuScreen : Screens("MainMenuScreen")
     object MainMapScreen : Screens("MainMap")
-    object CharacterScreen : Screens("CharacterScreen")
     object  InventoryScreen : Screens("InventoryScreen")
     object  SkillScreen : Screens("SkillScreen")
     object  ModifierScreen : Screens("ModifierScreen")
@@ -65,7 +68,6 @@ sealed class BottomBar(
     val icon: ImageVector
 ) {
     object MainMapScreen : BottomBar(Screens.MainMapScreen.route, "Mapa", Icons.Default.Home)
-    object CharacterScreen : BottomBar(Screens.CharacterScreen.route, "Postać", Icons.Default.Person)
     object InventoryScreen : BottomBar(Screens.InventoryScreen.route, "Ekwipunek", Icons.Default.MailOutline)
     object SkillScreen : BottomBar(Screens.SkillScreen.route, "Karty", Icons.Default.Share)
     object ModifierScreen : BottomBar(Screens.ModifierScreen.route, "Modyfikatory", Icons.Default.Build)
@@ -123,6 +125,12 @@ fun Navigation() {
         }
     }
 
+    when (navBackStackEntry?.destination?.route) {
+        "SettingsScreen" -> {
+            bottomBarState.value = false
+        }
+    }
+
 
     Scaffold(
         bottomBar = { BottomMenu(navController = navController, bottomBarState = bottomBarState)},
@@ -148,7 +156,6 @@ fun BottomNavGraph(navController: NavHostController){
             )
         }
         composable(route = Screens.CharacterCreationScreen.route){ CharacterCreationScreen(onMainMapScreen = { navController.navigate(Screens.MainMapScreen.route) }, context = LocalContext.current) }
-        composable(route = Screens.CharacterScreen.route){ CharacterScreen() }
         composable(route = Screens.InventoryScreen.route){ InventoryScreen() }
         composable(route = Screens.SkillScreen.route){ SkillScreen(){
             //player.updateDeck()
@@ -157,7 +164,8 @@ fun BottomNavGraph(navController: NavHostController){
             player.updateDeckModfiers()
         } }
         composable(route = Screens.MainMapScreen.route){
-            MainMapScreen({navController.navigate(Screens.FightScreen.route) },
+            MainMapScreen(
+                {navController.navigate(Screens.FightScreen.route) },
                 {navController.navigate(Screens.LevelUpScreen.route)})
         }
         composable(route = Screens.SettingsScreen.route){ SettingsScreen() }
@@ -173,37 +181,53 @@ fun BottomNavGraph(navController: NavHostController){
 }
 
 @Composable
-fun BottomMenu(navController: NavHostController, bottomBarState: MutableState<Boolean>){
+fun BottomMenu(navController: NavHostController, bottomBarState: MutableState<Boolean>) {
     val screens = listOf(
-        BottomBar.MainMapScreen,BottomBar.CharacterScreen, BottomBar.InventoryScreen, BottomBar.SkillScreen, BottomBar.ModifierScreen
+        BottomBar.MainMapScreen, BottomBar.InventoryScreen, BottomBar.SkillScreen, BottomBar.ModifierScreen, BottomBar.SettingsScreen
     )
 
-    Box(modifier = Modifier
-        .fillMaxSize(),
-        contentAlignment = Alignment.BottomStart)
-    {
+    Box(
+        modifier = Modifier
+            .fillMaxSize(),
+        contentAlignment = Alignment.BottomStart
+    ) {
         AnimatedVisibility(
             modifier = Modifier
-                .width(370.dp)
-                .height(50.dp),
+                .width(380.dp)
+                .height(55.dp)
+                .background(Color.DarkGray, shape = RectangleShape),
             visible = bottomBarState.value,
             enter = slideInVertically(initialOffsetY = { it }),
             exit = slideOutVertically(targetOffsetY = { it }),
             content = {
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentDestination = navBackStackEntry?.destination
-                NavigationBar{
-                    screens.forEach{screen ->
+                NavigationBar(
+                    modifier = Modifier
+                        .background(Color.DarkGray, shape = RectangleShape) // Tło ciemnoszare
+                        .border(
+                            width = 1.dp,
+                            color = Color(0xFFFFD700), // Złota ramka
+                            shape = RectangleShape
+                        )
+                ) {
+                    screens.forEach { screen ->
                         NavigationBarItem(
-                            label = { Text(text = screen.title, fontSize = 8.sp)},
-                            icon = { Icon(imageVector = screen.icon, contentDescription = "icon", modifier = Modifier.size(15.dp)) },
+                            modifier = Modifier.background(Color.Black, shape = RectangleShape),
+                            label = { Text(text = screen.title, fontSize = 8.sp) },
+                            icon = {
+                                Icon(
+                                    imageVector = screen.icon,
+                                    contentDescription = "icon",
+                                    modifier = Modifier.size(15.dp)
+                                )
+                            },
                             selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
-                            onClick = {navController.navigate(screen.route)}
+                            onClick = { navController.navigate(screen.route) }
                         )
                     }
                 }
             }
         )
     }
-
 }

@@ -19,15 +19,14 @@ class Player (
     //traits
     var rase = ""
     var profesions = mutableListOf<Profesions>()
-    var portrait = R.drawable.portrait1
     var EXP = mutableStateOf(0)
-    var EXPtoLv = 50 * lv
+    var EXPtoLv = 5 * lv
     //stats
     var MAX_HP = mutableStateOf(VIT*10)
     var HPbonus = 0
     var HP = mutableStateOf(VIT*10)
     var MAX_AP = mutableStateOf((DEX/5))
-    var APbonus = 0
+    var APbonus = 3
     var AP = mutableStateOf((DEX/5))
     var AP_recovery = 2
     var cardsSlots = 2
@@ -84,13 +83,20 @@ class Player (
         damage = weaponDamage+STR
     }
 
+    fun healRoom()
+    {
+        HP.value = player.MAX_HP.value
+        AP.value = player.MAX_AP.value
+    }
+
     fun levelUpPlayer(profession: Profesions){
         handleProfesionSelection(profession)
 
-        MAX_HP.value += (Random.nextInt(1, profession.healthDice) + healthDiceBonus + floor((VIT/10).toDouble()).toInt())
+        HPbonus += profession.healthDice + healthDiceBonus + floor((VIT/10).toDouble()).toInt()
+        updateStats()
         HP.value = player.MAX_HP.value
         AP.value = player.MAX_AP.value
-        updateStats()
+
     }
 
     fun handleProfesionSelection(profesion: Profesions) {
@@ -129,6 +135,8 @@ class Player (
                 }
             }
         }
+
+
     }
 
     fun addCard(card: Card) {
@@ -357,10 +365,10 @@ class Player (
 
     fun resetPlayer(){
         player.skillPoint = 1
-        player.STR = 10
-        player.VIT = 10
-        player.DEX = 10
-        player.INT = 10
+        player.STR = 1
+        player.VIT = 1
+        player.DEX = 1
+        player.INT = 1
     }
 }
 
@@ -379,7 +387,6 @@ fun savePlayerDataToFile(player: Player, context: Context) {
         appendLine("cardsSlots=${player.cardsSlots}")
         appendLine("healthDiceBonus=${player.healthDiceBonus}")
         appendLine("rase=${player.rase}")
-        appendLine("portrait=${player.portrait}")
         appendLine("gold=${player.gold}")
         appendLine("maxRunes=${player.maxRunes.value}")
         appendLine("runesActive=${player.runesActive.joinToString(";") { it.name }}")
@@ -474,7 +481,6 @@ fun loadPlayerDataFromFile(context: Context, fileName: String = "save.txt"): Pla
     )
 
     player.rase = map["rase"] ?: "Human"
-    player.portrait = map["portrait"]?.toInt() ?: R.drawable.portrait1
     player.profesions.addAll(profesionsList)
 
     player.EXP.value = map["EXP"]?.toInt() ?: 0

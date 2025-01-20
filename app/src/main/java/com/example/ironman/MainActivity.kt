@@ -20,7 +20,6 @@ class MainActivity : ComponentActivity() {
                 ) {
                     Navigation()
 
-
                     /*ItemsList["Siewca Smierci"]?.let { player.inventoryItems.add(it) }
                     ItemsList["Grzech Kaplana"]?.let { player.inventoryItems.add(it) }
                     ItemsList["Topor wojownika"]?.let { player.inventoryItems.add(it) }

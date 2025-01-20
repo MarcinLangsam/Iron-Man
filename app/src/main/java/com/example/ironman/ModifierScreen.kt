@@ -49,7 +49,7 @@ fun ModifierScreen(onDispose: () -> Unit) {
     Box(
         Modifier
             .fillMaxSize()
-            .background(Color(0xFFFFFACD)),
+            .background(Color(0xFF333333)),
     ) {
         FlowRow(
             modifier = Modifier
@@ -75,8 +75,8 @@ fun ModiferRecord(modfier: com.example.ironman.Modifier, index: Int) {
 
     Box(
         modifier = Modifier
-            .height(230.dp)
-            .width(100.dp)
+            .height(130.dp)
+            .width(260.dp)
             .padding(3.dp)
             .clickable { isGrayedOut.value = !isGrayedOut.value; player.mainDeck[index].isActive = !player.mainDeck[index].isActive }
     ) {
@@ -84,15 +84,15 @@ fun ModiferRecord(modfier: com.example.ironman.Modifier, index: Int) {
             painter = painterResource(id = cardSprite),
             contentDescription = "Image",
             modifier = Modifier
-                .height(200.dp)
-                .width(100.dp)
+                .height(130.dp)
+                .width(260.dp)
                 .then(if (!isGrayedOut.value) Modifier.alpha(0.5f) else Modifier.alpha(1f))
         )
         Text(
             text = cardDescription,
             modifier = Modifier
-                .offset(10.dp, 120.dp)
-                .width(80.dp),
+                .offset(100.dp, 30.dp)
+                .width(120.dp),
             style = MaterialTheme.typography.bodyLarge.copy(fontSize = 12.sp)
         )
     }

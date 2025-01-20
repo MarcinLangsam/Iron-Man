@@ -14,7 +14,7 @@ class Map(
     fun rollRoomContent(roomType: String) :String
     {
         // F - fight, T - tresure, H - heal, B- buff "" - empty room
-        val contentType = mutableListOf("F","F","F","T","T","","","","","","","H","H","B","H","H","B","H","H","B")
+        val contentType = mutableListOf("F","F","F","T","T","","","","","","","H","H")
         var roll = contentType.random()
         if(roomType == "C" && roll == "T") roll = ""
         return roll
@@ -90,7 +90,14 @@ class Map(
 
         val endPoint = endPoints.random()
         map[endPoint.first][endPoint.second].value = "#SE"
-        //map[numberOfSnakes/2][start+lengthOfSnakes/2].value = "#SU"
+
+        var newEndPoint: Pair<Int, Int>
+        do {
+            newEndPoint = endPoints.random()
+        } while (newEndPoint == endPoint)
+
+        map[newEndPoint.first][newEndPoint.second].value = "#SU"
+        revealRooms(newEndPoint.first,newEndPoint.second)
     }
 }
 

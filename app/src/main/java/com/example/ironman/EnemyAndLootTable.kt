@@ -4,10 +4,10 @@ import kotlin.random.Random
 
 fun rollLoot(): MutableList<String> {
     val finalLoot = mutableListOf<String>()
-    val itemType = mutableListOf("","","","R","R","R","R","W","W","C")
+    val itemType = mutableListOf("","","","R","R","W","W","W","W")
     for (x in 0 until LootTables[dungeonLevel]?.TresureSize!!)
     {
-        if (itemType.random() == "R")
+        if (itemType.random() == "R" && LootTables[dungeonLevel]?.runes?.isNotEmpty() == true)
         {
             val loot = LootTables[dungeonLevel]?.runes?.random()
             if (loot != null) {

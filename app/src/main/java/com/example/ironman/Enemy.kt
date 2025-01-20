@@ -58,9 +58,9 @@ public class Enemy(
     val actionsReady = mutableListOf<EnemyCards>()
 }
 
-var szkielet = Enemy("Szkielet", mutableStateOf(1), mutableStateOf(20),
-    mutableStateOf(20),mutableStateOf(4),mutableStateOf(10),mutableStateOf(10),mutableStateOf(10),10, 100,10,R.drawable.skeleton,
-    listOf(enemyCards["Atak"], enemyCards["Leczenie"], enemyCards["Walniecie"])
+var szkielet = Enemy("Szkielet", mutableStateOf(1), mutableStateOf(10),
+    mutableStateOf(10),mutableStateOf(1),mutableStateOf(1),mutableStateOf(1),mutableStateOf(1),1, 5,20,R.drawable.skeleton,
+    listOf(enemyCards["Atak"], enemyCards["Walniecie"])
 )
 
 var szkielet_wojownik = Enemy("Szkielet Wojownik", mutableStateOf(1), mutableStateOf(30),mutableStateOf(30),mutableStateOf(6),mutableStateOf(100),mutableStateOf(100),mutableStateOf(100),10, 20,10,R.drawable.szkielet_wojownik,

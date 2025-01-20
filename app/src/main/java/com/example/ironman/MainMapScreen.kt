@@ -3,6 +3,7 @@ package com.example.ironman
 import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -20,6 +21,7 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -30,6 +32,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -50,7 +54,7 @@ fun getMapTileIcon(type: String): Int {
     else if (type.contains("#SE"))
         return R.drawable.map_icon_small_exit
     else if (type.contains("#ST"))
-        return R.drawable.map_icon_small_heal
+        return R.drawable.map_icon_small_tresure
     else if (type.contains("#SF"))
         return R.drawable.map_icon_small_fight
     else if (type.contains("#S"))
@@ -61,7 +65,7 @@ fun getMapTileIcon(type: String): Int {
     else if (type.contains("#BT"))
         return R.drawable.map_icon_big_tresure
     else if (type.contains("#BF"))
-        return R.drawable.map_icon_big_buff
+        return R.drawable.map_icon_big_fight
     else if (type.contains("#B"))
         return R.drawable.map_icon_big
 
@@ -94,18 +98,6 @@ fun getMapTileIcon(type: String): Int {
     else if(type.contains("#CH"))
         return R.drawable.map_icon_corridor_heal
 
-    else if(type.contains("#LVB"))
-        return R.drawable.map_icon_long_vertical_buff
-    else if(type.contains("#LHB"))
-        return R.drawable.map_icon_long_horizontal_buff
-    else if(type.contains("#BB"))
-        return R.drawable.map_icon_big_buff
-    else if(type.contains("#SB"))
-        return R.drawable.map_icon_small_buff
-    else if(type.contains("#CB"))
-        return R.drawable.map_icon_corridor_heal //dac na buff !!!!!
-
-
     else
         return R.drawable.empty_slot
 }
@@ -132,9 +124,11 @@ fun MainMapScreen(onFightScreen: () -> Unit, onLevelUpScreen: () -> Unit) {
     Box(
         Modifier
             .fillMaxSize()
-            .background(Color.Black),
-        contentAlignment = Alignment.Center
-    ){}
+            .background(Color.Black)
+            .pointerInput(Unit) {}
+    ) {
+
+    }
 
     Row(
         modifier = Modifier
@@ -143,19 +137,6 @@ fun MainMapScreen(onFightScreen: () -> Unit, onLevelUpScreen: () -> Unit) {
         verticalAlignment = Alignment.Top,
         horizontalArrangement = Arrangement.Start
     ){
-        Column {
-            Row {
-                Image(
-                    painter = painterResource(id = player.portrait),
-                    contentDescription = "Portret gracza",
-                    modifier = Modifier.size(50.dp)
-                )
-            }
-
-            StatusBar(status = pHP, max = player.MAX_HP.value.toFloat(), barColor = Color.Red)
-            StatusBar(status = pEXP, max = player.EXPtoLv.toFloat(), barColor = Color.Cyan)
-        }
-
     }
     Column(
         modifier = Modifier
@@ -164,24 +145,21 @@ fun MainMapScreen(onFightScreen: () -> Unit, onLevelUpScreen: () -> Unit) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Row {
-            Button(onClick = { onLevelUpScreen.invoke() }) {
-                Text("NOWY POZIOM")
-            }
-            Button(onClick = { savePlayerDataToFile(player, context) }) {
-                Text("Zapisz grę")
-            }
 
-            Button(
-                onClick =
-                {
-                    generatedMap.generateMap()
-                    //revealFullMap()
-                },
-                modifier = Modifier.size(width = 130.dp, height = 80.dp)
-            ) {
-                Text("Generuj")
+        Column(horizontalAlignment = Alignment.Start) {
+            if (player.checkForLvUp()) {
+                Button(
+                    onClick = { onLevelUpScreen.invoke() },
+                    modifier = Modifier
+                        .size(240.dp) // Ustaw kwadratowy rozmiar
+                        .border(2.dp, Color.White, shape = RectangleShape), // Dodaj białą ramkę
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent) // Przezroczyste tło przycisku
+                ) {
+                    Text("NOWY POZIOM", color = Color.White) // Tekst w białym kolorze
+                }
             }
+            StatusBar(status = pHP, max = player.MAX_HP.value.toFloat(), barColor = Color.Red)
+            StatusBar(status = pEXP, max = player.EXPtoLv.toFloat(), barColor = Color.Cyan)
         }
 
         Spacer(modifier = Modifier
@@ -195,14 +173,13 @@ fun MainMapScreen(onFightScreen: () -> Unit, onLevelUpScreen: () -> Unit) {
                                 CorridorHorizontal(mapTileIcon = tile,{  },i,j)
                             }
                             R.drawable.map_icon_corridor_fight -> {
-                                CorridorHorizontal(mapTileIcon = tile, {  rollEnemy(); onFightScreen.invoke() }, i, j)
+                                CorridorHorizontal(mapTileIcon = tile, {  rollEnemy(); player.rollFullHandModifiers(); onFightScreen.invoke() }, i, j)
                             }
                             R.drawable.map_icon_corridor_exit -> {
-                                CorridorHorizontal(mapTileIcon = tile, {  generatedMap.generateMap();revealRooms(i,j) }, i, j)
+                                CorridorHorizontal(mapTileIcon = tile, {  generatedMap.generateMap(); }, i, j)
                             }
-                        R.drawable.map_icon_corridor_heal -> {
-                            CorridorHorizontal(mapTileIcon = tile, {  generatedMap.generateMap();revealRooms(i,j) }, i, j)
-                        }
+
+
 
                             R.drawable.map_icon_small  -> {
                                 SmallRoom(mapTileIcon = tile,{  },i,j)
@@ -214,17 +191,14 @@ fun MainMapScreen(onFightScreen: () -> Unit, onLevelUpScreen: () -> Unit) {
                                 )
                             }
                             R.drawable.map_icon_small_fight  -> {
-                                SmallRoom(mapTileIcon = tile, {  rollEnemy(); onFightScreen.invoke() }, i, j)
+                                SmallRoom(mapTileIcon = tile, {  rollEnemy(); player.rollFullHandModifiers(); onFightScreen.invoke() }, i, j)
                             }
                             R.drawable.map_icon_small_exit  -> {
                                 SmallRoom(mapTileIcon = tile, { generatedMap.generateMap();revealRooms(i,j) }, i, j)
                             }
-                        R.drawable.map_icon_small_buff  -> {
-                            SmallRoom(mapTileIcon = tile, { generatedMap.generateMap();revealRooms(i,j) }, i, j)
-                        }
-                        R.drawable.map_icon_small_heal -> {
-                            SmallRoom(mapTileIcon = tile, { generatedMap.generateMap();revealRooms(i,j) }, i, j)
-                        }
+                            R.drawable.map_icon_small_heal -> {
+                                SmallRoom(mapTileIcon = tile, { player.healRoom() ;revealRooms(i,j) }, i, j)
+                            }
 
                             R.drawable.map_icon_big -> {
                                 BigRoom(mapTileIcon = tile,{  },i,j)
@@ -236,17 +210,15 @@ fun MainMapScreen(onFightScreen: () -> Unit, onLevelUpScreen: () -> Unit) {
                                 )
                             }
                             R.drawable.map_icon_big_fight -> {
-                                BigRoom(mapTileIcon = tile, {  rollEnemy(); onFightScreen.invoke() }, i, j)
+                                BigRoom(mapTileIcon = tile, {  rollEnemy(); player.rollFullHandModifiers(); onFightScreen.invoke() }, i, j)
                             }
                             R.drawable.map_icon_big_exit -> {
                                 BigRoom(mapTileIcon = tile, {  generatedMap.generateMap();revealRooms(i,j) }, i, j)
                             }
-                        R.drawable.map_icon_big_buff -> {
-                            BigRoom(mapTileIcon = tile, {  generatedMap.generateMap();revealRooms(i,j) }, i, j)
-                        }
-                        R.drawable.map_icon_big_heal -> {
-                            BigRoom(mapTileIcon = tile, {  generatedMap.generateMap();revealRooms(i,j) }, i, j)
-                        }
+
+                            R.drawable.map_icon_big_heal -> {
+                                BigRoom(mapTileIcon = tile, {  player.healRoom() ;revealRooms(i,j) }, i, j)
+                            }
 
                             R.drawable.map_icon_long_vertical -> {
                                 LongVerticalRoom(mapTileIcon = tile,{ },i,j)
@@ -258,16 +230,13 @@ fun MainMapScreen(onFightScreen: () -> Unit, onLevelUpScreen: () -> Unit) {
                                 )
                             }
                             R.drawable.map_icon_long_vertical_fight -> {
-                                LongVerticalRoom(mapTileIcon = tile, {rollEnemy(); onFightScreen.invoke() }, i, j)
+                                LongVerticalRoom(mapTileIcon = tile, {rollEnemy(); player.rollFullHandModifiers(); onFightScreen.invoke() }, i, j)
                             }
                             R.drawable.map_icon_long_vertical_exit -> {
                                 LongVerticalRoom(mapTileIcon = tile, { generatedMap.generateMap();revealRooms(i,j) }, i, j)
                             }
                             R.drawable.map_icon_long_vertical_heal -> {
-                                LongVerticalRoom(mapTileIcon = tile, { generatedMap.generateMap();revealRooms(i,j) }, i, j)
-                            }
-                            R.drawable.map_icon_long_vertical_buff-> {
-                                LongVerticalRoom(mapTileIcon = tile, { generatedMap.generateMap();revealRooms(i,j) }, i, j)
+                                LongVerticalRoom(mapTileIcon = tile, { player.healRoom() ;revealRooms(i,j) }, i, j)
                             }
 
 
@@ -281,20 +250,16 @@ fun MainMapScreen(onFightScreen: () -> Unit, onLevelUpScreen: () -> Unit) {
                                 )
                             }
                             R.drawable.map_icon_long_horizontal_fight -> {
-                                LongHorizontalRoom(mapTileIcon = tile, { rollEnemy(); onFightScreen.invoke() }, i, j)
+                                LongHorizontalRoom(mapTileIcon = tile, { rollEnemy(); player.rollFullHandModifiers(); onFightScreen.invoke() }, i, j)
                             }
                             R.drawable.map_icon_long_horizontal_exit -> {
                                 LongHorizontalRoom(mapTileIcon = tile, { generatedMap.generateMap();revealRooms(i,j) }, i, j)
 
                             }
                             R.drawable.map_icon_long_horizontal_heal -> {
-                                LongHorizontalRoom(mapTileIcon = tile, { generatedMap.generateMap();revealRooms(i,j) }, i, j)
+                                LongHorizontalRoom(mapTileIcon = tile, { player.healRoom(); revealRooms(i,j) }, i, j)
 
                             }
-                        R.drawable.map_icon_long_horizontal_buff -> {
-                            LongHorizontalRoom(mapTileIcon = tile, { generatedMap.generateMap();revealRooms(i,j) }, i, j)
-
-                        }
                     }
                 }
             }

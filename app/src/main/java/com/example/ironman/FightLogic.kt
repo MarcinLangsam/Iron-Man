@@ -49,6 +49,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -58,6 +59,10 @@ var queuedModifierIndex = mutableListOf<Int>()
 var currentEnemy = szkielet
 var moveToTarget = false
 var bottomBarCheck = true
+
+var typeModifier = false
+var bonusValue = 0
+var reduction = 0
 
 fun checkForExceedingHPorAP(entity: Any)
 {
@@ -77,21 +82,40 @@ fun endFight(enemy: Enemy): Boolean {
     return player.HP.value <= 0 || enemy.HP.value <=0
 }
 
-fun useCard(card: Card): Int {
-    if(card.type == "attack")
-    {
-        currentEnemy.HP.value -= card.effect.invoke()
-        //player.AP.value -= card.AP_required
+fun processModifiers() {
+    for (modifier in player.modiferQueue) {
+        when (modifier.type) {
+            "damage" -> {
+                bonusValue += modifier.effect()
+            }
+            "reduction" -> {
+                reduction += modifier.effect()
+            }
+            "switchToHeal" -> {
+                typeModifier = true
+            }
+        }
     }
-    if(card.type == "heal")
+}
+
+fun useCard(card: Card): Int {
+    processModifiers()
+    if(card.type == "attack" && !typeModifier)
     {
-        player.HP.value += card.effect.invoke()
-        //player.AP.value -= card.AP_required
+        currentEnemy.HP.value -= card.effect.invoke() + bonusValue
+        player.AP.value += reduction
+        checkForExceedingHPorAP(player)
+    }
+    if(card.type == "heal" || typeModifier)
+    {
+        player.HP.value += card.effect.invoke() + bonusValue
+        player.AP.value += reduction
         checkForExceedingHPorAP(player)
     }
     if(card.type == "rest")
     {
-        player.AP.value += card.effect.invoke()
+        player.AP.value += card.effect.invoke() + bonusValue
+        player.AP.value += reduction
         checkForExceedingHPorAP(player)
     }
     return card.effect.invoke()
@@ -113,7 +137,7 @@ fun useCardEnemy(card: EnemyCards) : Int
 
 fun addModifierToCard(modifier: com.example.ironman.Modifier)
 {
-    if(maxModifier > 0)
+    if(maxModifier > 0 && player.AP.value >= modifier.AP)
     {
         if(player.modiferQueue.size < activeCard[0].modifiersSlots){ player.modiferQueue.add(modifier) }
     }
@@ -122,8 +146,10 @@ fun addModifierToCard(modifier: com.example.ironman.Modifier)
 fun popModifierFromCard()
 {
     if (player.modiferQueue.isNotEmpty()) {
-        player.modiferQueue.removeFirst()
-        //player.AP.value += popedModifier.AP_required
+        val popedModifier = player.modiferQueue.first()
+        player.modiferQueue.removeAt(0)
+        player.AP.value += popedModifier.AP
+
     }
 
 }
@@ -193,12 +219,12 @@ fun FightScreen(onMap: () -> Unit){
     LaunchedEffect(moveToTarget) {
         if (moveToTarget) {
             hideBeginTurn = true
-            for(x in player.actionQueue)
+            for(x in activeCard)
             {
                 if (x.type == "attack")
                 {
                     xOffsetPlayer.animateTo(targetXPlayer, animationSpec = tween(500))
-                    //useCard(x)
+                    useCard(x)
                     damageText = useCard(x).toString()
                     damagePosition = 390.dp
                     damageColor = Color.Black
@@ -212,7 +238,7 @@ fun FightScreen(onMap: () -> Unit){
                 else
                 {
                     yOffsetPlayer.animateTo(targetYPlayer, animationSpec = tween(100))
-                    //useCard(x)
+                    useCard(x)
                     damageText = useCard(x).toString()
                     damagePosition = 100.dp
                     damageColor = Color.Green
@@ -267,8 +293,11 @@ fun FightScreen(onMap: () -> Unit){
                 }
             }
             player.AP.value += player.AP_recovery
-            player.actionQueue.clear()
+            resetActiveCard()
             queuedModifierIndex.clear()
+            bonusValue = 0
+            reduction = 0
+            typeModifier = false
             moveToTarget = false
             hideBeginTurn = false
         }
@@ -310,6 +339,8 @@ fun FightScreen(onMap: () -> Unit){
 
             DamagePopUp(damageVisible = damageVisible, damagePosition = damagePosition, damageText = damageText, color = damageColor)
         }
+
+
         Column {
             repeat(isModifierVisible.size) { index ->
                 if (isModifierVisible[index]) {
@@ -318,7 +349,6 @@ fun FightScreen(onMap: () -> Unit){
             }
         }
         BattleSprite(xOffset = xOffsetPlayer.value.dp+150.dp, yOffset = yOffsetPlayer.value.dp-50.dp, sprite = R.drawable.player)
-
 
     }
 
@@ -335,7 +365,7 @@ fun FightScreen(onMap: () -> Unit){
                 player.AP = player.MAX_AP
                 player.EXP.value += currentEnemy.EXPGiven
                 player.gold += currentEnemy.goldGiven
-                player.actionQueue.clear()
+                resetActiveCard()
                 bottomBarCheck = true
 
                 currentEnemy.HP = currentEnemy.MAX_HP
@@ -344,7 +374,6 @@ fun FightScreen(onMap: () -> Unit){
 
         }
         StatusBar(status = eHP, max = currentEnemy.MAX_HP.value.toFloat(), barColor = Color.Red)
-        Text(text = "Przeciwnik", fontSize = 25.sp)
         BattleSprite(xOffset = xOffsetEnemy.value.dp-120.dp, yOffset = yOffsetEnemy.value.dp, sprite = R.drawable.skeleton)
 
     }
@@ -366,9 +395,6 @@ fun FightScreen(onMap: () -> Unit){
                     Card_Button(onClickAction = {setActiveCard(player.cardsOnHand[index])}, skillDescription = player.cardsOnHand[index].descriptionFight, sprite = player.cardsOnHand[index].sprite, spriteHold = player.cardsOnHand[index].spriteHold)
                 }
             }
-            //Row {
-
-            //}
         }
     }
 }
@@ -395,7 +421,7 @@ fun Modifier_Button(onClickAction: () -> Unit, skillDescription: String, sprite:
                         isHeld = true
                         isLongPress = false
                         scope.launch {
-                            currentWidth= 250.dp
+                            currentWidth= 300.dp
                             currentDescription = skillDescription
                             delay(500)
                             if (isHeld) {
@@ -420,7 +446,7 @@ fun Modifier_Button(onClickAction: () -> Unit, skillDescription: String, sprite:
             }
     ) {
         Image(
-            painter = painterResource(id = if (isHeld) sprite else sprite),
+            painter = painterResource(id = if (isHeld) spriteHold else sprite),
             contentDescription = "Image",
             modifier = Modifier.fillMaxSize()
         )
@@ -619,13 +645,13 @@ fun BattleSprite(xOffset: Dp, yOffset: Dp, sprite: Int)
             .width(150.dp)
             .height(250.dp)
             .offset(xOffset.value.dp, yOffset.value.dp)
+            .zIndex(1f)
     ){
         Image(
             painter = painterResource(id = sprite),
             contentDescription = "Image",
             modifier = Modifier
-                .width(150.dp)
-                .height(250.dp)
+                .fillMaxSize()
         )
     }
 }
